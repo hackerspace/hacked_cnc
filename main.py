@@ -44,7 +44,7 @@ class Command(object):
         if f == 'G':  # standard g-code
             self.g = True
         elif f == 'M':  # RepRap command
-            self.g = True
+            self.m = True
         elif f == 'T':  # select tool
             self.t = True
         else:
