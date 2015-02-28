@@ -215,22 +215,11 @@ class MachineTalk(LineReceiver):
 
         self.handle(line)
 
-
     def rawDataReceived(self, data):
         print('raw serial data:', data)
 
-    def init(self):
-        self.cmd('G28')
-        self.cmd('G0 F11000')
-        self.cmd('G0 Z1')
-
     def __str__(self):
         return "Generic Machine"
-
-    def end(self):
-        self.cmd('G28')
-        self.cmd('M18')
-        self.quit()
 
     def quit(self):
         reactor.callLater(1, reactor.stop)
