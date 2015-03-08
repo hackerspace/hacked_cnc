@@ -2,6 +2,7 @@ import math
 
 import Queue
 
+from twisted.python import log
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
@@ -32,8 +33,17 @@ class Command(object):
     pre_encoded = None
     line = None
 
+    d = None
+
+    def ack(self, cmd):
+        self.acked = True
+        return cmd
+
     def __init__(self, cmd):
         self.raw = cmd
+        self.d = Deferred()
+        self.d.addCallback(self.ack)
+        self.d.addErrback(log.err)
 
         if not cmd.strip():
             self.empty = True
@@ -175,8 +185,8 @@ class MachineTalk(LineReceiver):
         if sl.startswith('ok'):
             try:
                 cmd = self.ack_queue.get_nowait()
-                cmd.acked = True
-                #print 'acked cmd:', cmd.text
+                reactor.callLater(0.1, cmd.d.callback, cmd)
+                print 'acked cmd:', cmd.text
                 self.sent.append(cmd)
             except Queue.Empty:
                 # more ok's than commands we've sent
