@@ -112,6 +112,9 @@ class MachineTalk(LineReceiver):
 
         self.test_connection()
 
+    def connectionLost(self):
+        print('Serial connection lost')
+
     def cmd(self, cmd):
         """
         High level command handling
