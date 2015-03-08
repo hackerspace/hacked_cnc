@@ -77,6 +77,9 @@ class Command(object):
         else:
             return self.normalized
 
+    def __str__(self):
+        return self.text
+
 
 class MachineTalk(LineReceiver):
     delimiter = '\n'
