@@ -126,7 +126,7 @@ class MachineTalk(LineReceiver):
         if cmd.empty:
             return
 
-        if not cmd.special:  # apply Numbering and CRC for normal commands
+        if not (cmd.special or cmd.pre_encoded):  # apply Numbering and CRC for normal commands
             out = ''
 
             if self.numbered:
