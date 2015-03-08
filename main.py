@@ -8,6 +8,7 @@ from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
 from twisted.protocols.basic import LineReceiver
 
+from hc import server
 from hc.hacks import HackedSerialPort
 from hc.mocked import MockedPrinter
 from hc.util import trace
@@ -97,6 +98,9 @@ class MachineTalk(LineReceiver):
     ready_cb = Deferred()
 
     max_waiting_for_ack = 10
+
+    def __init__(self, srv):
+        self.srv = srv
 
     def connectionMade(self):
         print('Machine {0} connected '.format(self))
@@ -233,7 +237,9 @@ class MachineTalk(LineReceiver):
             cline = line
             if COLORED:
                 cline = color.green(cline)
-            print('< {0}'.format( cline))
+            print('< {0}'.format(cline))
+
+        self.srv.broadcast(line)
 
         self.handle(line)
 
@@ -248,29 +254,38 @@ class MachineTalk(LineReceiver):
 
 
 if __name__ == '__main__':
-    proto = MachineTalk()
-    HackedSerialPort(proto, '/dev/ttyACM0', reactor, baudrate='250000')
     #MockedPrinter(proto)
 
     from twisted.internet import task
 
-    def l():
-        proto.cmd('M114')
+    @trace
+    def handle_temp(cmd):
+        print 'TEMP'
+        print cmd
 
-    def p():
-        #proto.cmd('version')
-        proto.cmd('M114')
+    @trace
+    def probe(proto):
+        c = proto.cmd('M114')
+        c.d.addCallback(handle_temp)
 
-    def bfs():
+    def bfs(proto):
         proto.buffer_stat()
 
-    t = task.LoopingCall(l)
-    t.start(1.1)
+    tcpfactory = server.MonitorFactory()
+    reactor.listenTCP(8000, tcpfactory)
 
-    tt = task.LoopingCall(p)
-    tt.start(1.)
+    proto = MachineTalk(tcpfactory)
+    tcpfactory.sr = proto
+    proto.ready_cb.addCallback(probe)
+    proto.ready_cb.addErrback(log.err)
+    HackedSerialPort(proto, '/dev/ttyACM0', reactor, baudrate='250000')
 
+    """
     bs = task.LoopingCall(bfs)
     bs.start(1.3)
+    """
 
     reactor.run()
+
+# > N3 N2 M114*37*86
+# triggers real rs
