@@ -146,6 +146,8 @@ class MachineTalk(LineReceiver):
         self.prio_queue.put(cmd)
         self.try_tx()
 
+        return cmd
+
         #if COLORED:
         #    out = color.red(cmd.text)
         #print(out)
