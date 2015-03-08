@@ -94,6 +94,8 @@ class MachineTalk(LineReceiver):
     sent = None
     reset_line_numbering = True
 
+    ready_cb = Deferred()
+
     max_waiting_for_ack = 10
 
     def connectionMade(self):
@@ -217,6 +219,8 @@ class MachineTalk(LineReceiver):
             print('Connection test passed')
             self.connection_test = False
             self.healthy = True
+
+            self.ready_cb.callback(self)
 
     def lineReceived(self, line):
 
