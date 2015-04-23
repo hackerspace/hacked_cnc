@@ -1,16 +1,12 @@
-import math
-
 import Queue
 
 from twisted.python import log
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
-from twisted.internet.task import LoopingCall
 from twisted.protocols.basic import LineReceiver
 
 from hc import server
 from hc.hacks import HackedSerialPort
-from hc.mocked import MockedPrinter
 from hc.util import trace
 
 from fabulous import color
@@ -18,7 +14,6 @@ from fabulous import color
 
 COLORED = True
 DEBUG_SERIAL = False
-
 
 
 class Command(object):
@@ -97,6 +92,7 @@ class MachineTalk(LineReceiver):
 
     ready_cb = Deferred()
 
+    # maximum number of commands in queue waiting for 'ok' ack
     max_waiting_for_ack = 10
 
     def __init__(self, srv):
@@ -254,10 +250,6 @@ class MachineTalk(LineReceiver):
 
 
 if __name__ == '__main__':
-    #MockedPrinter(proto)
-
-    from twisted.internet import task
-
     @trace
     def handle_temp(cmd):
         print 'TEMP'
@@ -276,16 +268,9 @@ if __name__ == '__main__':
 
     proto = MachineTalk(tcpfactory)
     tcpfactory.sr = proto
+
     proto.ready_cb.addCallback(probe)
     proto.ready_cb.addErrback(log.err)
     HackedSerialPort(proto, '/dev/ttyACM0', reactor, baudrate='250000')
 
-    """
-    bs = task.LoopingCall(bfs)
-    bs.start(1.3)
-    """
-
     reactor.run()
-
-# > N3 N2 M114*37*86
-# triggers real rs
