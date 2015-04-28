@@ -1,0 +1,8 @@
+#!/usr/bin/python
+from twisted.python import log
+from twisted.internet import stdio, reactor
+
+from hc.mocked import MockedPrinter
+
+stdio.StandardIO(MockedPrinter())
+reactor.run()
