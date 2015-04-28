@@ -1,7 +1,9 @@
+#!/usr/bin/python
+import argparse
 import Queue
 
 from twisted.python import log
-from twisted.internet import reactor
+from twisted.internet import stdio, reactor
 from twisted.internet.defer import Deferred
 from twisted.protocols.basic import LineReceiver
 
@@ -250,6 +252,12 @@ class MachineTalk(LineReceiver):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='hacked-cnc server')
+    parser.add_argument('--stdio', action="store_true", default=False,
+                        help='Use stdio')
+
+    args = parser.parse_args()
+
     @trace
     def handle_temp(cmd):
         print 'TEMP'
@@ -271,6 +279,9 @@ if __name__ == '__main__':
 
     proto.ready_cb.addCallback(probe)
     proto.ready_cb.addErrback(log.err)
-    HackedSerialPort(proto, '/dev/ttyACM0', reactor, baudrate='250000')
+    if args.stdio:
+        stdio.StandardIO(proto)
+    else:
+        HackedSerialPort(proto, '/dev/ttyACM0', reactor, baudrate='250000')
 
     reactor.run()

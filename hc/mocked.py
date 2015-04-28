@@ -2,6 +2,7 @@ from twisted.protocols.basic import LineReceiver
 
 
 class MockedPrinter(LineReceiver):
+    delimiter = '\n'
     serial_rx_verbose = True
     serial_tx_verbose = True
 
