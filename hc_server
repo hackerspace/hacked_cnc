@@ -4,7 +4,7 @@ import argparse
 from twisted.python import log
 from twisted.internet import stdio, reactor
 
-from hc import server
+from hc import server, config
 from hc.hacks import HackedSerialPort
 from hc.util import trace
 from hc.machine_proto import MachineTalk
@@ -30,7 +30,7 @@ if __name__ == '__main__':
         proto.buffer_stat()
 
     tcpfactory = server.MonitorFactory()
-    reactor.listenTCP(8000, tcpfactory)
+    reactor.listenTCP(config.get('monitor_port'), tcpfactory)
 
     proto = MachineTalk(tcpfactory)
     tcpfactory.sr = proto
@@ -40,6 +40,6 @@ if __name__ == '__main__':
     if args.stdio:
         stdio.StandardIO(proto)
     else:
-        HackedSerialPort(proto, '/dev/ttyACM0', reactor, baudrate='250000')
+        HackedSerialPort(proto, config.get('default_port'), reactor, baudrate='250000')
 
     reactor.run()
