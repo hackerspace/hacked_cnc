@@ -7,6 +7,8 @@ class Command(object):
     m = False
     t = False
     special = False
+    comment = False
+    internal = False
 
     acked = False
     empty = False
@@ -39,6 +41,10 @@ class Command(object):
             self.m = True
         elif f == 'T':  # select tool
             self.t = True
+        elif f == '#':  # HC internal command
+            self.internal = True
+        elif f in [';', '(']:
+            self.comment = True
         else:
             self.special = True
 

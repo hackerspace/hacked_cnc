@@ -59,7 +59,8 @@ class MachineTalk(LineReceiver):
         if not isinstance(cmd, Command):
             cmd = Command(cmd)
 
-        if cmd.empty:
+        if cmd.empty or cmd.comment:
+            self.try_tx()
             return
 
         if not (cmd.special or cmd.pre_encoded):  # apply Numbering and CRC for normal commands
