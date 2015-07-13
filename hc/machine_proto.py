@@ -119,6 +119,7 @@ class MachineTalk(LineReceiver):
                 cline = color.red(cline)
 
             print('> {0}'.format(cline))
+            self.srv.broadcast('> {0}\n'.format(cmd.text))
 
         self.transport.write(cmd.text)
         self.transport.write('\n')
@@ -186,7 +187,7 @@ class MachineTalk(LineReceiver):
                 cline = color.green(cline)
             print('< {0}'.format(cline))
 
-        self.srv.broadcast(line)
+        self.srv.broadcast('< {0}\n'.format(line))
 
         self.handle(line)
 
