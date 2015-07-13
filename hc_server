@@ -40,6 +40,7 @@ if __name__ == '__main__':
     if args.stdio:
         stdio.StandardIO(proto)
     else:
-        HackedSerialPort(proto, config.get('default_port'), reactor, baudrate='250000')
+        HackedSerialPort(proto, config.get('port'), reactor,
+                         baudrate=config.get('baudrate'))
 
     reactor.run()
