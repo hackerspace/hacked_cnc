@@ -100,7 +100,7 @@ class MachineTalk(LineReceiver):
     def try_tx(self):
         if self.prio_queue.empty():
             if self.source and self.source.depleted and self.exit_when_done:
-                self.quit()
+                reactor.callLater(2, self.quit)
                 return False
 
             return False
