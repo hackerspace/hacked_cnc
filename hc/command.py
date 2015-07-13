@@ -29,8 +29,10 @@ class Command(object):
         self.d.addCallback(self.ack)
         self.d.addErrback(log.err)
 
-        if not cmd.strip():
+        cmd = cmd.strip()
+        if not cmd:
             self.empty = True
+            return
 
         self.normalized = cmd.upper()
         f = self.normalized[0]
