@@ -1,12 +1,13 @@
 import Queue
 
-from twisted.internet import reactor
+from twisted.internet import reactor, task
 from twisted.internet.defer import Deferred
 from twisted.protocols.basic import LineReceiver
 
 from fabulous import color
 
 from .command import Command
+from .util import trace
 
 
 COLORED = True
@@ -28,8 +29,13 @@ class MachineTalk(LineReceiver):
 
     ready_cb = Deferred()
 
+    source = None
+    source_fetch = None
+    exit_when_done = False
+
     # maximum number of commands in queue waiting for 'ok' ack
-    max_waiting_for_ack = 10
+    max_waiting_for_ack = 5
+    # wrong ^^ we need to count character (256 characters for Smoothie)
 
     def __init__(self, srv):
         self.srv = srv
@@ -60,7 +66,6 @@ class MachineTalk(LineReceiver):
             cmd = Command(cmd)
 
         if cmd.empty or cmd.comment:
-            self.try_tx()
             return
 
         if not (cmd.special or cmd.pre_encoded):  # apply Numbering and CRC for normal commands
@@ -76,6 +81,9 @@ class MachineTalk(LineReceiver):
                 out += '*{0}'.format(self.checksum(out))
 
             cmd.line = self.line
+
+            assert '\n' not in out
+
             cmd.pre_encoded = out
 
             self.line += 1
@@ -90,9 +98,14 @@ class MachineTalk(LineReceiver):
         #print(out)
 
     def try_tx(self):
-        if (self.prio_queue.empty()
-                or self.ack_queue.qsize() >= self.max_waiting_for_ack):
+        if self.prio_queue.empty():
+            if self.source and self.source.depleted and self.exit_when_done:
+                self.quit()
+                return False
 
+            return False
+
+        if self.ack_queue.qsize() >= self.max_waiting_for_ack:
             return False
 
         try:
@@ -135,6 +148,7 @@ class MachineTalk(LineReceiver):
                 reactor.callLater(0.1, cmd.d.callback, cmd)
                 print 'acked cmd:', cmd.text
                 self.sent.append(cmd)
+                self.try_tx()
             except Queue.Empty:
                 # more ok's than commands we've sent
                 print 'more acks'
@@ -184,3 +198,49 @@ class MachineTalk(LineReceiver):
 
     def quit(self):
         reactor.callLater(1, reactor.stop)
+
+    @trace
+    def fetch_source(self, amount=100):
+        if not self.source.hasdata:
+            if self.source.depleted:
+                self.source_fetch.stop()
+
+            return
+
+        lines = self.source.readlines(amount)
+        for line in lines:
+            self.cmd(line)
+
+    @trace
+    def feed_file(self, proto, fpath):
+        self.source = GCodeSource(fpath)
+        self.fetch_source(1000)
+        self.source_fetch = task.LoopingCall(self.fetch_source)
+        self.source_fetch.start(1)
+
+        return proto
+
+
+class GCodeSource(object):
+    def __init__(self, fpath):
+        self.file = open(fpath)
+        self.depleted = False  # source depleted
+
+    def readlines(self, num_lines):
+        '''
+        Read approximately num_lines
+        '''
+        if not self.file:
+            return []
+
+        lines = self.file.readlines(num_lines)
+        if len(lines) == 0:
+            self.file = None
+            self.depleted = True
+            return []
+
+        return lines
+
+    @property
+    def hasdata(self):
+        return self.file is not None
