@@ -1,0 +1,48 @@
+#!/usr/bin/python
+import argparse
+
+from twisted.python import log
+from twisted.internet import stdio, reactor, task
+
+from hc import server, config
+from hc.hacks import HackedSerialPort
+from hc.util import trace
+from hc.machine_proto import MachineTalk
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='hacked-cnc test')
+    parser.add_argument('--testcmd', default="M114",
+                        help='Command to use in test loop')
+
+    args = parser.parse_args()
+    testcmd = args.testcmd
+
+    def temp(proto):
+        proto.cmd(testcmd)
+
+    def start_temp(proto):
+        b = task.LoopingCall(temp, proto)
+        b.start(0.1)
+        return proto
+
+    def bfs(proto):
+        proto.buffer_stat()
+
+    def start_bfs(proto):
+        b = task.LoopingCall(bfs, proto)
+        b.start(1)
+        return proto
+
+    tcpfactory = server.MonitorFactory()
+    reactor.listenTCP(config.get('monitor_port'), tcpfactory)
+
+    proto = MachineTalk(tcpfactory)
+    tcpfactory.sr = proto
+
+    proto.ready_cb.addCallback(start_temp)
+    proto.ready_cb.addCallback(bfs)
+    proto.ready_cb.addErrback(log.err)
+    HackedSerialPort(proto, config.get('port'), reactor,
+                     baudrate=config.get('baudrate'))
+
+    reactor.run()
