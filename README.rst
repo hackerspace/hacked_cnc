@@ -22,7 +22,8 @@ Clone this repository::
 
         git clone https://github.com/sorki/hacked_cnc
 
-Install default config file::
+Install default configuration file::
+
         cd hacked_cnc
         mkdir ~/.hc/
         cp config ~/.hc/config
