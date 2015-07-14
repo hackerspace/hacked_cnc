@@ -1,0 +1,6 @@
+[defaults]
+port = /dev/cnc
+baudrate = 250000
+
+[net]
+monitor_port = 11011
