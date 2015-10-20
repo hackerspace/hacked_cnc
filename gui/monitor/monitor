@@ -96,8 +96,8 @@ class Main(QMainWindow):
         if not self.connected:
             self.err("Not connected")
             return
-
-        self.conn.write(self.prompt.text() + '\n')
+        out = (self.prompt.text() + '\n').encode('ascii')
+        self.conn.write(out)
 
     @pyqtSlot()
     def on_right_on_clicked(self):
