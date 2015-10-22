@@ -4,8 +4,6 @@ from twisted.internet import reactor, task
 from twisted.internet.defer import Deferred
 from twisted.protocols.basic import LineReceiver
 
-from fabulous import color
-
 from .command import Command
 from .util import trace
 
@@ -93,10 +91,6 @@ class MachineTalk(LineReceiver):
 
         return cmd
 
-        #if COLORED:
-        #    out = color.red(cmd.text)
-        #print(out)
-
     def try_tx(self):
         if self.prio_queue.empty():
             if self.source and self.source.depleted and self.exit_when_done:
@@ -114,11 +108,7 @@ class MachineTalk(LineReceiver):
             return False
 
         if self.serial_tx_verbose:
-            cline = cmd.text
-            if COLORED:
-                cline = color.red(cline)
-
-            print('> {0}'.format(cline))
+            print('> {0}'.format(cmd.text))
             self.srv.broadcast('> {0}\n'.format(cmd.text))
 
         self.transport.write(cmd.text)
@@ -182,10 +172,7 @@ class MachineTalk(LineReceiver):
     def lineReceived(self, line):
 
         if self.serial_rx_verbose:
-            cline = line
-            if COLORED:
-                cline = color.green(cline)
-            print('< {0}'.format(cline))
+            print('< {0}'.format(line))
 
         self.srv.broadcast('< {0}\n'.format(line))
 
