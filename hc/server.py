@@ -1,5 +1,5 @@
 from twisted.python import log
-from twisted.internet.protocol import Factory, ClientFactory
+from twisted.internet.protocol import Factory, ReconnectingClientFactory
 from twisted.protocols.basic import LineReceiver
 
 
@@ -16,7 +16,7 @@ class MonitorServer(LineReceiver):
         self.factory.clients.remove(self)
 
     def lineReceived(self, line):
-        print 'recieved: {0}'.format(line)
+        log.msg('monitor received: {0}'.format(line))
         self.factory.sr.cmd(line)
 
 
@@ -41,15 +41,22 @@ class MonitorClient(LineReceiver):
             print(line)
 
 
-class MonitorClientFactory(ClientFactory):
+class MonitorClientFactory(ReconnectingClientFactory):
     protocol = MonitorClient
     fwd = None
-    cp = None
+
+    def __init__(self):
+        self.connected_cb = None
+        self.disconnected_cb = None
 
     def buildProtocol(self, addr):
         proto = self.protocol()
-        self.cp.p = proto
         if self.fwd:
             proto.fwd = self.fwd
 
         return proto
+
+    def clientConnectionMade(self, protocol):
+        log.msg('monitor connection made')
+        self.proto = protocol
+        self.connected_cb(protocol)
