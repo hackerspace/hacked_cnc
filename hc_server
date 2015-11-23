@@ -16,26 +16,12 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    @trace
-    def handle_temp(cmd):
-        print 'TEMP'
-        print cmd
-
-    @trace
-    def probe(proto):
-        c = proto.cmd('M114')
-        c.d.addCallback(handle_temp)
-
-    def bfs(proto):
-        proto.buffer_stat()
-
     tcpfactory = server.MonitorFactory()
     reactor.listenTCP(config.get('monitor_port'), tcpfactory)
 
     proto = MachineTalk(tcpfactory)
     tcpfactory.sr = proto
 
-    proto.ready_cb.addCallback(probe)
     proto.ready_cb.addErrback(log.err)
     if args.stdio:
         stdio.StandardIO(proto)
