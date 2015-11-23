@@ -1,0 +1,27 @@
+#!/bin/bash -ex
+#
+# Tool for running hc_mocked_mocked printer piped to hc_server
+#
+
+temp=$( mktemp -d )
+
+finish() {
+    killall hc_server
+    killall hc_mocked_printer
+    rm -rf $temp
+}
+
+trap finish EXIT
+
+pushd $temp
+mkfifo printer_to_server
+mkfifo server_to_printer
+popd
+
+cat $temp/server_to_printer | ./hc_mocked_printer > $temp/printer_to_server &
+cat $temp/printer_to_server | ./hc_server --stdio > $temp/server_to_printer &
+
+jobs
+while true; do sleep 10m; done
+
+finish
