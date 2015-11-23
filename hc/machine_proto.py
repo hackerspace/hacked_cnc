@@ -1,5 +1,6 @@
 import Queue
 
+from twisted.python import log
 from twisted.internet import reactor, task
 from twisted.internet.defer import Deferred
 from twisted.protocols.basic import LineReceiver
@@ -39,7 +40,7 @@ class MachineTalk(LineReceiver):
         self.srv = srv
 
     def connectionMade(self):
-        print('Machine {0} connected '.format(self))
+        log.msg('Machine {0} connected '.format(self))
         if DEBUG_SERIAL:
             self.setRawMode()
 
@@ -53,7 +54,7 @@ class MachineTalk(LineReceiver):
         self.test_connection()
 
     def connectionLost(self, reason):
-        print('Serial connection lost, reason: ', reason)
+        log.msg('Serial connection lost, reason: ', reason)
 
     def cmd(self, cmd):
         """
@@ -108,7 +109,7 @@ class MachineTalk(LineReceiver):
             return False
 
         if self.serial_tx_verbose:
-            print('> {0}'.format(cmd.text))
+            log.msg('> {0}'.format(cmd.text))
             self.srv.broadcast('> {0}\n'.format(cmd.text))
 
         self.transport.write(cmd.text)
@@ -123,9 +124,9 @@ class MachineTalk(LineReceiver):
         return True
 
     def buffer_stat(self):
-        print('ACK Queue: {0}'.format(self.ack_queue.qsize()))
-        print('PRIO Queue: {0}'.format(self.prio_queue.qsize()))
-        print('Sent Queue: {0}'.format(len(self.sent)))
+        log.msg('ACK Queue: {0}'.format(self.ack_queue.qsize()))
+        log.msg('PRIO Queue: {0}'.format(self.prio_queue.qsize()))
+        log.msg('Sent Queue: {0}'.format(len(self.sent)))
 
     def checksum(self, cmd):
         return reduce(lambda x, y: x ^ y, map(ord, cmd))
@@ -137,21 +138,22 @@ class MachineTalk(LineReceiver):
             try:
                 cmd = self.ack_queue.get_nowait()
                 reactor.callLater(0.1, cmd.d.callback, cmd)
-                print 'acked cmd:', cmd.text
+                log.msg('acked cmd: {}'.format(cmd.text))
                 self.sent.append(cmd)
                 self.try_tx()
             except Queue.Empty:
                 # more ok's than commands we've sent
-                print 'more acks'
+                log.msg('more acks received')
                 pass
 
+        # FIXME: RESEND!
         #if sl.startswith('rs')
 
         if self.connection_test:
             self.handle_connection_test(sl)
 
         if sl == 'Smoothie':
-            print('Smoothie detected')
+            log.msg('Smoothie detected')
 
     def test_connection(self):
         self.connection_test = True
@@ -161,9 +163,8 @@ class MachineTalk(LineReceiver):
         return 'ok' in line
 
     def handle_connection_test(self, line):
-        print repr(line)
         if self.test_gcode_expected(line):
-            print('Connection test passed')
+            log.msg('Connection test passed')
             self.connection_test = False
             self.healthy = True
 
@@ -172,14 +173,14 @@ class MachineTalk(LineReceiver):
     def lineReceived(self, line):
 
         if self.serial_rx_verbose:
-            print('< {0}'.format(line))
+            log.msg('< {0}'.format(line))
 
         self.srv.broadcast('< {0}\n'.format(line))
 
         self.handle(line)
 
     def rawDataReceived(self, data):
-        print('raw serial data:', data)
+        log.msg('raw serial data:', data)
 
     def __str__(self):
         return "Generic Machine"
