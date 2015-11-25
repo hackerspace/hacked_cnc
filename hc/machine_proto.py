@@ -146,8 +146,8 @@ class MachineTalk(LineReceiver):
                 log.msg('more acks received')
                 pass
 
-        # FIXME: RESEND!
-        #if sl.startswith('rs')
+        if sl.startswith('rs'):
+            log.msg('Resend requested')
 
         if self.connection_test:
             self.handle_connection_test(sl)

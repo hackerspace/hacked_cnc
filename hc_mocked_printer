@@ -2,7 +2,9 @@
 from twisted.python import log
 from twisted.internet import stdio, reactor
 
-from hc.mocked import MockedPrinter
+import hc
+from hc.mocked import *
 
-stdio.StandardIO(MockedPrinter())
+hc.setup()
+stdio.StandardIO(BufferedMockedPrinter())
 reactor.run()

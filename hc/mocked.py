@@ -1,31 +1,55 @@
+import random
+
+from twisted.internet import task
 from twisted.protocols.basic import LineReceiver
+
+from . import log
+
+#from twisted.logger import Logger
+# FIXME: update to ^^ when possible
 
 
 class MockedPrinter(LineReceiver):
     delimiter = '\n'
-    serial_rx_verbose = not True
-    serial_tx_verbose = not True
+    serial_rx_verbose = True
+    serial_tx_verbose = True
+    current_line = 0
 
     def connectionMade(self):
         self.cmd('start')
 
     def cmd(self, cmd):
         if self.serial_tx_verbose:
-            print('M> {0}'.format(cmd))
+            log.msg('M> {0}'.format(cmd))
 
         self.transport.write(cmd)
         self.transport.write('\n')
 
     def ack(self):
         if self.serial_tx_verbose:
-            print('M> ok')
+            log.msg('M> ok')
 
         self.transport.write('ok\n')
 
-    def lineReceived(self, line):
-        if self.serial_rx_verbose:
-            print('M< {0}'.format(line))
+    def fail(self, msg):
+        log.msg('Fail! {}'.format(msg))
 
+    def request_resend(self):
+        ln = self.current_line - random.randrange(0, 10)
+        if ln < 0:
+            ln = 0
+
+        self.current_line = ln - 1
+        self.cmd('rs {}'.format(ln))
+
+    def lineReceived(self, line):
+        self.current_line += 1
+        if self.serial_rx_verbose:
+            log.msg('M< {0}'.format(line))
+
+        self.handle_line(line)
+
+    def handle_line(self, line):
         self.handle(line)
 
     def handle(self, line):
@@ -39,45 +63,56 @@ class MockedPrinter(LineReceiver):
         if 'M114' in line:
             self.cmd('Temp lala')
 
+        if 'resend' in line:
+            self.request_resend()
+
         self.ack()
 
 
-class BufferedMockedPrinter(LineReceiver):
-    delimiter = '\n'
-    serial_rx_verbose = True
-    serial_tx_verbose = True
+class BufferedMockedPrinter(MockedPrinter):
+    max_lines = 10
+    max_bytes = 256
+    interval = 1
 
-    def connectionMade(self):
-        self.cmd('start')
+    def __init__(self):
+        self.lines = []
+        self.c_lines = 0
+        self.c_bytes = 0
+        self.loop = task.LoopingCall(self.run)
+        self.loop.start(self.interval)
 
-    def cmd(self, cmd):
-        if self.serial_tx_verbose:
-            print('M> {0}'.format(cmd))
-
-        self.transport.write(cmd)
-        self.transport.write('\n')
-
-    def ack(self):
-        if self.serial_tx_verbose:
-            print('M> ok')
-
-        self.transport.write('ok\n')
-
-    def lineReceived(self, line):
-        if self.serial_rx_verbose:
-            print('M< {0}'.format(line))
-
-        self.handle(line)
-
-    def handle(self, line):
-        sl = line.strip()
-        if not sl:
+    def run(self):
+        if self.c_lines == 0:
             return
 
-        if line == 'M110':
-            self.cmd('Res')
+        line = self.lines.pop()
+        self.c_lines -= 1
+        self.c_bytes -= len(line)
+        log.msg("Executing {}".format(line))
+        self.handle(line)
 
-        if line == 'M114':
-            self.cmd('Temp lala')
+    def buffer_stat(self):
+        log.msg("{}/{}, {}/{}".format(self.c_lines, self.max_lines,
+                                      self.c_bytes, self.max_bytes))
 
-        self.ack()
+
+
+    def handle_line(self, line):
+        self.c_lines += 1
+        self.c_bytes += len(line)
+        self.buffer_stat()
+
+        if self.c_lines >= self.max_lines:
+            self.fail('Firmware buffer overrun, max lines exceeded')
+
+        if self.c_bytes >= self.max_bytes:
+            self.fail('Firmware buffer overrun, max lines exceeded')
+
+        self.lines.append(line)
+
+    def request_resend(self):
+        self.c_lines = 0
+        self.c_bytes = 0
+        self.lines = []
+
+        MockedPrinter.request_resend(self)

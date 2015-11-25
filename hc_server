@@ -4,6 +4,7 @@ import argparse
 from twisted.python import log
 from twisted.internet import stdio, reactor
 
+import hc
 from hc import server, config
 from hc.hacks import HackedSerialPort
 from hc.machine_proto import MachineTalk
@@ -14,6 +15,8 @@ if __name__ == '__main__':
                         help='Use stdio')
 
     args = parser.parse_args()
+
+    hc.setup()
 
     server = server.build()
 
