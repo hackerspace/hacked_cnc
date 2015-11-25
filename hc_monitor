@@ -1,0 +1,33 @@
+#!/usr/bin/python
+import argparse
+
+from twisted.internet import reactor
+
+import hc
+
+
+def dump(data):
+    print('"{}"'.format(data))
+
+
+def dump_raw(msg):
+    print(msg)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='hc monitor')
+    parser.add_argument('-r', '--raw',
+                        action="store_true", default=False,
+                        help='Dump raw messages')
+
+    args = parser.parse_args()
+
+    hc.setup()
+
+    fact = hc.client.build()
+    if args.raw:
+        fact.fwd_raw = dump_raw
+    else:
+        fact.fwd = dump
+
+    reactor.run()
