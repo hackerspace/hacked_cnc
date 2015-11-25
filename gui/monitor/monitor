@@ -35,7 +35,6 @@ class Main(QMainWindow):
         self.text.append(text)
 
         if self.autoscroll.isChecked():
-            print "va"
             c = self.text.textCursor()
             c.movePosition(QTextCursor.End, QTextCursor.MoveAnchor)
             self.text.setTextCursor(c)
