@@ -3,7 +3,7 @@
 import sys
 
 from PyQt5.QtCore import pyqtSlot, QTimer
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QTextCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QFileDialog
 from PyQt5.uic import loadUi
 from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket
@@ -31,6 +31,15 @@ class Main(QMainWindow):
 
         self.prompt.setFocus()
 
+    def append(self, text):
+        self.text.append(text)
+
+        if self.autoscroll.isChecked():
+            print "va"
+            c = self.text.textCursor()
+            c.movePosition(QTextCursor.End, QTextCursor.MoveAnchor)
+            self.text.setTextCursor(c)
+
     def readSocket(self):
         r = self.conn.readAll()
         if r:
@@ -44,15 +53,15 @@ class Main(QMainWindow):
                     else:
                         self.text.setTextColor(QColor(0, 0, 200))
 
-                    self.text.append(chunk)
+                    self.append(chunk)
 
     def info(self, errtext):
         self.text.setTextColor(QColor(20, 20, 20))
-        self.text.append(errtext)
+        self.append(errtext)
 
     def err(self, errtext):
         self.text.setTextColor(QColor(100, 0, 0))
-        self.text.append(errtext)
+        self.append(errtext)
 
     def socketDisconnect(self):
         self.connected = False

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>405</width>
     <height>300</height>
    </rect>
   </property>
@@ -87,6 +87,16 @@
       </item>
      </layout>
     </item>
+    <item>
+     <widget class="QCheckBox" name="autoscroll">
+      <property name="text">
+       <string>Autoscroll</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -94,7 +104,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>400</width>
+     <width>405</width>
      <height>19</height>
     </rect>
    </property>
