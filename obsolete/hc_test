@@ -34,7 +34,7 @@ if __name__ == '__main__':
         return proto
 
     tcpfactory = server.MonitorFactory()
-    reactor.listenTCP(config.get('monitor_port'), tcpfactory)
+    reactor.listenTCP(config.get('server_port'), tcpfactory)
 
     proto = MachineTalk(tcpfactory)
     tcpfactory.sr = proto

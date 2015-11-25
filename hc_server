@@ -6,7 +6,6 @@ from twisted.internet import stdio, reactor
 
 from hc import server, config
 from hc.hacks import HackedSerialPort
-from hc.util import trace
 from hc.machine_proto import MachineTalk
 
 if __name__ == '__main__':
@@ -16,11 +15,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    tcpfactory = server.MonitorFactory()
-    reactor.listenTCP(config.get('monitor_port'), tcpfactory)
+    server = server.build()
 
-    proto = MachineTalk(tcpfactory)
-    tcpfactory.sr = proto
+    proto = MachineTalk(server)
+    server.sr = proto
 
     proto.ready_cb.addErrback(log.err)
     if args.stdio:

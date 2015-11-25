@@ -21,11 +21,10 @@ if __name__ == '__main__':
     if not os.access(args.FILE, os.R_OK):
         sys.exit(0)
 
-    tcpfactory = server.MonitorFactory()
-    reactor.listenTCP(config.get('monitor_port'), tcpfactory)
+    server = server.build()
 
-    proto = MachineTalk(tcpfactory)
-    tcpfactory.sr = proto
+    proto = MachineTalk(server)
+    server.sr = proto
 
     def bfs(proto):
         proto.buffer_stat()
@@ -39,7 +38,6 @@ if __name__ == '__main__':
     proto.ready_cb.addErrback(log.err)
 
     proto.exit_when_done = True
-
 
     HackedSerialPort(proto, config.get('port'), reactor,
                      baudrate=config.get('baudrate'))

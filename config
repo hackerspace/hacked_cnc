@@ -3,4 +3,5 @@ port = /dev/cnc
 baudrate = 250000
 
 [net]
-monitor_port = 11011
+server_host = localhost
+server_port = 11011

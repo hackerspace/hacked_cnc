@@ -1,27 +1,30 @@
 from twisted.python import log
-from twisted.internet.protocol import Factory, ReconnectingClientFactory
+from twisted.internet import reactor
+from twisted.internet.protocol import Factory
 from twisted.protocols.basic import LineReceiver
 
+from . import config
 
-class MonitorServer(LineReceiver):
+
+class HcServer(LineReceiver):
     delimiter = '\n'
 
     def connectionMade(self):
-        print('got new client')
+        print('Got new client')
         self.factory.clients.append(self)
         #self.setRawMode()
 
     def connectionLost(self, reason):
-        log.msg('lost client')
+        log.msg('Lost client')
         self.factory.clients.remove(self)
 
     def lineReceived(self, line):
-        log.msg('monitor received: {0}'.format(line))
+        log.msg('Server received: {0}'.format(line))
         self.factory.sr.cmd(line)
 
 
-class MonitorFactory(Factory):
-    protocol = MonitorServer
+class HcServerFactory(Factory):
+    protocol = HcServer
     clients = []
     sr = None
 
@@ -30,33 +33,8 @@ class MonitorFactory(Factory):
             client.sendLine(msg)
 
 
-class MonitorClient(LineReceiver):
-    delimiter = '\n'
-    fwd = None
+def build():
+    f = HcServerFactory()
+    reactor.listenTCP(config.get('server_port'), f)
 
-    def lineReceived(self, line):
-        if self.fwd:
-            self.fwd(line)
-        else:
-            print(line)
-
-
-class MonitorClientFactory(ReconnectingClientFactory):
-    protocol = MonitorClient
-    fwd = None
-
-    def __init__(self):
-        self.connected_cb = None
-        self.disconnected_cb = None
-
-    def buildProtocol(self, addr):
-        proto = self.protocol()
-        if self.fwd:
-            proto.fwd = self.fwd
-
-        return proto
-
-    def clientConnectionMade(self, protocol):
-        log.msg('monitor connection made')
-        self.proto = protocol
-        self.connected_cb(protocol)
+    return f
