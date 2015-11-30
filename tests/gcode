@@ -1,0 +1,45 @@
+#!/usr/bin/python
+# -*- encoding: utf-8 -*-
+
+import hctests
+
+from hc import gcode
+from hc import error
+
+
+class GcodeTestCase(hctests.TestCase):
+    #
+    samples = {
+        'N123 G0 X13.37 F13000': ('G0 X13.37 F13000', 123, None),
+        'N0 M18': ('M18', 0, None),
+        'M18': ('M18', None, None),
+        'M18*68': ('M18', None, 68),
+        'N10M666*123': ('M666', 10, 123),
+    }
+
+    invalid_samples = [
+        "NN",
+        "NXG13",
+        "N12G13*X",
+    ]
+
+    def test_gcode_parse(self):
+        for x, y in self.samples.items():
+            self.assertEqual(gcode.parse(x), y)
+
+    def test_gcode_parse_raies(self):
+        for s in self.invalid_samples:
+            with self.assertRaises(error.ParseError):
+                print(s)
+                gcode.parse(s)
+
+    def test_gcode_checksum(self):
+        for x, y in self.samples.items():
+            if not y[2]:  # no checksum on this sample
+                continue
+
+            self.assertEqual(gcode.checksum(gcode.parse(x)[0]), y[2])
+
+
+if __name__ == "__main__":
+    hctests.main()

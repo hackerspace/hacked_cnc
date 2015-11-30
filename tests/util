@@ -1,0 +1,23 @@
+#!/usr/bin/python
+# -*- encoding: utf-8 -*-
+
+import hctests
+
+from hc import util
+
+
+class UtilTestCase(hctests.TestCase):
+    def test_data_encoding(self):
+        """
+        Test data ecoding and decoding funtions
+        """
+
+        d = [{'lala': 13.37}]
+        enc = util.encdata(d)
+        dec = util.decdata(enc)
+
+        self.assertEqual(d, dec)
+
+
+if __name__ == "__main__":
+    hctests.main()
