@@ -14,6 +14,8 @@ class MockedPrinter(LineReceiver):
     serial_rx_verbose = True
     serial_tx_verbose = True
     current_line = 0
+    failcounter = 0
+    warncounter = 0
 
     def connectionMade(self):
         self.cmd('start')
@@ -32,7 +34,12 @@ class MockedPrinter(LineReceiver):
         self.transport.write('ok\n')
 
     def fail(self, msg):
+        self.failcounter += 1
         log.msg('Fail! {}'.format(msg))
+
+    def warn(self, msg):
+        self.warncounter += 1
+        log.msg('Warning: {}'.format(msg))
 
     def request_resend(self):
         ln = self.current_line - random.randrange(0, 10)
@@ -55,6 +62,7 @@ class MockedPrinter(LineReceiver):
     def handle(self, line):
         sl = line.strip()
         if not sl:
+            self.warn('Empty command received')
             return
 
         if line == 'M110':
