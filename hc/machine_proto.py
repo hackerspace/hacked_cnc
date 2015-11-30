@@ -7,6 +7,7 @@ from twisted.protocols.basic import LineReceiver
 
 from .command import Command
 from .util import trace
+from .gcode import checksum
 
 
 COLORED = True
@@ -77,7 +78,7 @@ class MachineTalk(LineReceiver):
 
             if self.checksummed:
                 # compute checksum from line number + command
-                out += '*{0}'.format(self.checksum(out))
+                out += '*{0}'.format(checksum(out))
 
             cmd.line = self.line
 
@@ -127,9 +128,6 @@ class MachineTalk(LineReceiver):
         log.msg('ACK Queue: {0}'.format(self.ack_queue.qsize()))
         log.msg('PRIO Queue: {0}'.format(self.prio_queue.qsize()))
         log.msg('Sent Queue: {0}'.format(len(self.sent)))
-
-    def checksum(self, cmd):
-        return reduce(lambda x, y: x ^ y, map(ord, cmd))
 
     def handle(self, line):
         sl = line.strip()
