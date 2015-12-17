@@ -31,6 +31,8 @@ class Main(QMainWindow):
 
         self.prompt.setFocus()
 
+        self.do_connect()
+
     def append(self, text):
         self.text.append(text)
 
@@ -96,12 +98,14 @@ class Main(QMainWindow):
             with open(fname, 'w+') as f:
                 f.write(self.text.toPlainText())
 
-    @pyqtSlot()
-    def on_connect_clicked(self):
+    def do_connect(self):
         self.conn.abort()
         self.conn.connectToHost(self.host.text(),
                                 int(self.port.text()))
 
+    @pyqtSlot()
+    def on_connect_clicked(self):
+        self.do_connect()
         self.prompt.setFocus()
 
     @pyqtSlot()
