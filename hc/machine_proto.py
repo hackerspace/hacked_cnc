@@ -26,6 +26,7 @@ class MachineTalk(LineReceiver):
     prio_queue = None
     sent = None
     reset_line_numbering = True
+    resend_counter = 0
 
     ready_cb = Deferred()
 
@@ -34,6 +35,7 @@ class MachineTalk(LineReceiver):
     exit_when_done = False
 
     # maximum number of commands in queue waiting for 'ok' ack
+    # FIXME: reword as buffer_size (in bytes), how to query this from FW?
     max_waiting_for_ack = 5
     # wrong ^^ we need to count character (256 characters for Smoothie)
 
@@ -51,11 +53,16 @@ class MachineTalk(LineReceiver):
 
         if self.reset_line_numbering:
             self.cmd('M110 N0')
+            self.line = 1
 
         self.test_connection()
 
     def connectionLost(self, reason):
         log.msg('Serial connection lost, reason: ', reason)
+
+    def fatal(self, msg):
+        log.msg('Fatal error: {}'.format(msg))
+        # FIXME: what now?
 
     def cmd(self, cmd):
         """
@@ -130,7 +137,8 @@ class MachineTalk(LineReceiver):
         log.msg('Sent Queue: {0}'.format(len(self.sent)))
 
     def handle(self, line):
-        sl = line.strip()
+        # normalize
+        sl = line.strip().lower()
 
         if sl.startswith('ok'):
             try:
@@ -144,8 +152,36 @@ class MachineTalk(LineReceiver):
                 log.msg('more acks received')
                 pass
 
+        # resend ('rs N%d')
         if sl.startswith('rs'):
+            self.resend_counter += 1
             log.msg('Resend requested')
+            try:
+                # FIXME: should go to hc/parse
+                _, ln = line.split('N')
+
+                ln = int(ln)
+                log.msg('Resending from line {}'.format(ln))
+
+            except ValueError:
+                self.fatal('Unable to parse resend response')
+
+            # walk ack_queue
+            while True:
+                try:
+                    cmd = self.ack_queue.get_nowait()
+                    if cmd.line >= ln:
+                        self.prio_queue.put(cmd)
+                    else:
+                        # firmware requested resend of N but there's
+                        # M (M < N) in ack_queue waiting for ack,
+                        # treat it as sent
+                        # FIXME: should spit warning
+                        self.sent.append(cmd)
+                except Queue.Empty:
+                    break
+
+            self.try_tx()
 
         if self.connection_test:
             self.handle_connection_test(sl)
