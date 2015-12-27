@@ -163,8 +163,7 @@ class MachineTalk(LineReceiver):
                 log.msg('more acks received')
                 pass
 
-        # resend ('rs N%d')
-        if sl.startswith('rs'):
+        elif sl.startswith('rs'):
             self.resend_counter += 1
             log.msg('Resend requested')
             try:
