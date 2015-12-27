@@ -34,6 +34,8 @@ class MachineTalk(LineReceiver):
     source_fetch = None
     exit_when_done = False
 
+    command_result_candidate = []
+
     # maximum number of commands in queue waiting for 'ok' ack
     # FIXME: reword as buffer_size (in bytes), how to query this from FW?
     max_waiting_for_ack = 5
@@ -143,8 +145,17 @@ class MachineTalk(LineReceiver):
         if sl.startswith('ok'):
             try:
                 cmd = self.ack_queue.get_nowait()
+
+                rest = sl[2:]
+                if rest:
+                    self.command_result_candidate.append(rest)
+
+                cmd.result = "\n".join(self.command_result_candidate)
+                self.command_result_candidate = []
+
                 reactor.callLater(0.1, cmd.d.callback, cmd)
                 log.msg('acked cmd: {}'.format(cmd.text))
+                log.msg('cmd result: {}'.format(cmd.result))
                 self.sent.append(cmd)
                 self.try_tx()
             except Queue.Empty:
@@ -182,6 +193,10 @@ class MachineTalk(LineReceiver):
                     break
 
             self.try_tx()
+        else:
+            # buffer unknown responses to be used as result of next
+            # acked command
+            self.command_result_candidate.append(line)
 
         if self.connection_test:
             self.handle_connection_test(sl)
