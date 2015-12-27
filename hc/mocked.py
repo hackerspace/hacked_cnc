@@ -158,7 +158,7 @@ class BufferedMockedPrinter(MockedPrinter):
             self.fail('Firmware buffer overrun, max lines exceeded')
 
         if self.c_bytes >= self.max_bytes:
-            self.fail('Firmware buffer overrun, max lines exceeded')
+            self.fail('Firmware buffer overrun, max bytes exceeded')
 
         self.lines.append(line)
 
