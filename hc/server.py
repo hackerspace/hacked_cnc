@@ -4,6 +4,7 @@ from twisted.internet.protocol import Factory
 from twisted.protocols.basic import LineReceiver
 
 from . import config
+from . import util
 
 
 class HcServer(LineReceiver):
@@ -18,9 +19,17 @@ class HcServer(LineReceiver):
         log.msg('Lost client')
         self.factory.clients.remove(self)
 
+    def ack(self, cmd, idx):
+        em = util.enc_msg(cmd.result, idx)
+        self.sendLine(em)
+
     def lineReceived(self, line):
         log.msg('Server received: {0}'.format(line))
-        self.factory.sr.cmd(line)
+
+        (idx, msg) = util.dec_msg(line)
+
+        cmd = self.factory.sr.cmd(msg)
+        cmd.d.addCallback(self.ack, idx)
 
 
 class HcServerFactory(Factory):

@@ -224,7 +224,7 @@ class MachineTalk(LineReceiver):
         if self.serial_rx_verbose:
             log.msg('< {0}'.format(line))
 
-        self.srv.broadcast('< {0}\n'.format(line))
+        #self.srv.broadcast('< {0}\n'.format(line))
 
         self.handle(line)
 

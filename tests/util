@@ -18,6 +18,26 @@ class UtilTestCase(hctests.TestCase):
 
         self.assertEqual(d, dec)
 
+    def test_msg_encoding(self):
+        msg = 'G0 X1.0 Y1337 F123'
+
+        enc = util.enc_msg(msg)
+        dec = util.dec_msg(enc)
+
+        self.assertEqual(None, dec[0])
+        self.assertEqual(msg, dec[1])
+
+    def test_indexed_msg_encoding(self):
+        msg = 'G0 X1.0 Y1337 F123'
+        idx = 123
+
+        enc = util.enc_msg(msg, idx)
+        dec = util.dec_msg(enc)
+        print enc
+        print dec
+
+        self.assertEqual(idx, dec[0])
+        self.assertEqual(msg, dec[1])
 
 if __name__ == "__main__":
     hctests.main()

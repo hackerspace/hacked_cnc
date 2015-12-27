@@ -5,7 +5,7 @@ from twisted.python import log
 from twisted.internet import stdio, reactor
 
 import hc
-from hc import server, config
+from hc import server, config, monitor
 from hc.hacks import HackedSerialPort
 from hc.machine_proto import MachineTalk
 
@@ -19,9 +19,11 @@ if __name__ == '__main__':
     hc.setup()
 
     server = server.build()
+    monitor = monitor.build_server()
 
     proto = MachineTalk(server)
     server.sr = proto
+    monitor.sr = proto
 
     proto.ready_cb.addErrback(log.err)
     if args.stdio:
