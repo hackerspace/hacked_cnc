@@ -1,0 +1,57 @@
+#!/usr/bin/python
+# -*- encoding: utf-8 -*-
+
+import hctests
+
+from hc import parse
+from hc import error
+
+
+class ParseProbeTestCase(hctests.TestCase):
+    def test_parse_probe(self):
+        samples = {
+            'Z:4.4328 C:45392': (4.4328, 45392),
+        }
+
+        for x, y in samples.items():
+            self.assertEqual(parse.probe(x), y)
+
+    def test_parse_probe_raies(self):
+        invalid_samples = [
+            'ZZZZ:4.4328 C:45392',
+        ]
+
+        for s in invalid_samples:
+            with self.assertRaises(error.ParseError):
+                parse.probe(s)
+
+    def test_parse_axes(self):
+        samples = {
+            'X4.4 A1 E13.37': [('X', 4.4), ('A', 1.0), ('E', 13.37)],
+            'G0 X4.4 A1 E13.37 F9000': [('X', 4.4), ('A', 1.0), ('E', 13.37)],
+        }
+
+        for x, y in samples.items():
+            self.assertEqual(parse.axes(x), y)
+
+    def test_parse_xyz(self):
+        samples = {
+            'X4.4 Y1 Z13.37': (4.4, 1.0, 13.37),
+            'G0 X4.4 F100 Z13.37': (4.4, None, 13.37),
+        }
+
+        for x, y in samples.items():
+            self.assertEqual(parse.xyz(x), y)
+
+    def test_parse_xyz_raises(self):
+        invalid_samples = [
+            'ZZZZ:4.4328 C:45392',
+        ]
+        allnone = (None, None, None)
+
+        for s in invalid_samples:
+            self.assertEqual(parse.xyz(s), allnone)
+
+
+if __name__ == "__main__":
+    hctests.main()
