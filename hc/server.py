@@ -12,6 +12,8 @@ class HcServer(LineReceiver):
 
     def connectionMade(self):
         print('Got new client')
+        self.transport.setTcpNoDelay(True)
+        self.transport.setTcpKeepAlive(True)
         self.factory.clients.append(self)
         #self.setRawMode()
 
