@@ -24,6 +24,7 @@ if __name__ == '__main__':
     proto = MachineTalk(server)
     server.sr = proto
     monitor.sr = proto
+    proto.monitor = monitor
 
     proto.ready_cb.addErrback(log.err)
     if args.stdio:
