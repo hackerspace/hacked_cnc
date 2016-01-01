@@ -23,6 +23,7 @@ class HcServer(LineReceiver):
 
     def ack(self, cmd, idx):
         em = util.enc_msg(cmd.result, idx)
+        log.msg('Server acking: {0}'.format(em))
         self.sendLine(em)
 
     def lineReceived(self, line):
@@ -31,7 +32,8 @@ class HcServer(LineReceiver):
         (idx, msg) = util.dec_msg(line)
 
         cmd = self.factory.sr.cmd(msg)
-        cmd.d.addCallback(self.ack, idx)
+        if cmd:
+            cmd.d.addCallback(self.ack, idx)
 
 
 class HcServerFactory(Factory):
