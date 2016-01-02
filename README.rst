@@ -30,13 +30,9 @@ Install default configuration file::
 
 You should edit this file according to your needs.
 
-Test configuration with::
-
-        ./hc_test
-
-or::
-
-        ./hc_test --testcmd M119
-
-If everything works correctly you can start ``hc_server``
+Now you can start ``hc_server``
 and connect to it with one of the gui/cli clients.
+
+For testing purposes there is ``run_fake`` script
+that will start ``hc_server`` with mocked printer
+attached.
