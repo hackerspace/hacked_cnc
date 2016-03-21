@@ -8,7 +8,7 @@ probe_re = re.compile(r'Z:([^\s]+) C:([^\s]+)')
 # designator regexp
 # X123.12 = ('X', 123.12)
 # G0 = ('G', 0)
-des_re = r'([{}])(\d+\.?\d*)'
+des_re = r'([{}])(-?\d+\.?\d*)'
 axes_re = re.compile(des_re.format(''.join(vars.axes_designators)))
 
 
