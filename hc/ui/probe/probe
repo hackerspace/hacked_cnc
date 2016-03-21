@@ -90,6 +90,8 @@ class Main(QMainWindow):
         self.connected = False
 
         self.actionSave.triggered.connect(self.do_save)
+        self.actionSave_probe_data.triggered.connect(self.save_probe_data_dialog)
+        self.actionLoad_probe_data.triggered.connect(self.load_probe_data_dialog)
 
         self.prompt.setFocus()
         self.prompt.lineEdit().returnPressed.connect(self.on_send_clicked)
@@ -156,6 +158,40 @@ class Main(QMainWindow):
             z, c = parse.probe(txt)
             self.gl.proberes.probe_results.append((self.current_x, self.current_y, z))
             self.gl.proberes.update_results()
+
+    def save_probe_data_dialog(self):
+        if not self.gl.proberes.probe_results:
+            # err not much to save
+            return
+
+        fname, sel = QFileDialog.getSaveFileName(
+            self,
+            'Save Log',)
+            #'/path/to/default/directory', FIXME: lastused
+            #selectedFilter='*.txt')
+
+        if fname:
+            self.save_probe_data(self, fname)
+
+    def save_probe_data(self, fname):
+        with open(fname, 'w') as f:
+            for x, y, z in self.gl.proberes.probe_results:
+                f.write("{:04.2f} {:04.2f} {:04.2f}\n".format(x, y, z))
+
+    def load_probe_data_dialog(self):
+        d = QFileDialog(self)
+        d.setNameFilter("Log data (*.txt *.log);;All files (*.*)")
+        d.exec_()
+        fname = d.selectedFiles()[0]
+        if fname:
+            self.load_probe_data(fname)
+
+    def load_probe_data(self, fname):
+        with open(fname, 'r') as f:
+            d = (map(lambda x: map(float, x.split()), f.readlines()))
+
+        self.gl.proberes.probe_results = d
+        self.gl.proberes.update_results()
 
     @pyqtSlot()
     def on_save_clicked(self):

@@ -335,6 +335,10 @@
     </property>
     <addaction name="actionSave"/>
     <addaction name="actionQuit"/>
+    <addaction name="separator"/>
+    <addaction name="actionSave_probe_data"/>
+    <addaction name="actionLoad_probe_data"/>
+    <addaction name="separator"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -353,6 +357,16 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionLoad_probe_data">
+   <property name="text">
+    <string>&amp;Load probe data</string>
+   </property>
+  </action>
+  <action name="actionSave_probe_data">
+   <property name="text">
+    <string>Save &amp;probe data</string>
    </property>
   </action>
  </widget>
