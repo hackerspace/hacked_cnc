@@ -1,14 +1,11 @@
-#import pyqtgraph as pg
-
 import numpy as np
-import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-#from pyqtgraph.opengl.items import GLGraphicsItem
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 from OpenGL.GL import *
 
 
 import util
+
 
 class Cross(GLGraphicsItem):
     cross_size = 10
@@ -69,18 +66,16 @@ class ProbeList(GLGraphicsItem):
 
 
 class ProbeResult(gl.GLSurfacePlotItem):
+    # fixme: use data instead of this
     probe_results = []
+    offset = 0
+    exaggerate = 1
 
     def update_results(self):
-        #super(ProbeResult, self).update()
         probe_results = self.probe_results
 
         if not probe_results:
             return
-
-        #probe_results = sorted(probe_results)
-        print(probe_results)
-
 
         lx = len(set(map(lambda x: x[0], probe_results)))
         ly = len(set(map(lambda x: x[1], probe_results)))
@@ -88,8 +83,6 @@ class ProbeResult(gl.GLSurfacePlotItem):
         x = []
         y = []
         z = np.zeros((lx, ly))
-
-        print('len {} {}'.format(lx, ly))
 
         row = -1
 
@@ -101,21 +94,8 @@ class ProbeResult(gl.GLSurfacePlotItem):
                 y.append(r[1])
                 row += 1
 
-            #if ly > 1 and (i) % lx == 0:
-            #    row += 1
+            z[i % lx, row] = (r[2] + self.offset) * self.exaggerate
 
-            print('ii {} {}'.format(i, r))
-            print('uii {} {}'.format(i % lx, row))
-            z[i % lx, row] = r[2]
-
-        #z = map(lambda x: x[2], probe_results)
-
-        print(x)
-        print(y)
-        print(z)
-        print('lenxy {} {}'.format(len(x), len(y)))
-
-        #self.setData(x=x, y=y, z=z)
         self.setData(x=np.array(x), y=np.array(y), z=z)
 
 
