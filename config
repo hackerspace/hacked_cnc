@@ -2,6 +2,10 @@
 port = /dev/cnc
 baudrate = 250000
 
+[protocol]
+numbered = false
+checksummed = false
+
 [net]
 server_host = localhost
 server_port = 11011

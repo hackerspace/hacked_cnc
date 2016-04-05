@@ -5,6 +5,7 @@ from twisted.internet import reactor, task
 from twisted.internet.defer import Deferred
 from twisted.protocols.basic import LineReceiver
 
+from . import config
 from .command import Command
 from .util import trace
 from .gcode import checksum
@@ -19,8 +20,8 @@ class MachineTalk(LineReceiver):
     test_gcode = 'M114'
     serial_rx_verbose = True
     serial_tx_verbose = True
-    numbered = True
-    checksummed = True
+    numbered = config.get("numbered", False)
+    checksummed = config.get("checksummed", False)
     line = 0
     ack_queue = None
     prio_queue = None
