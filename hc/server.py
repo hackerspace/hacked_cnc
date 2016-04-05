@@ -27,6 +27,10 @@ class HcServer(LineReceiver):
         self.sendLine(em)
 
     def lineReceived(self, line):
+        line = line.strip()
+        if not line:
+            return
+
         log.msg('Server received: {0}'.format(line))
 
         (idx, msg) = util.dec_msg(line)
