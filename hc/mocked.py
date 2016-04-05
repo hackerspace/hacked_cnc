@@ -147,6 +147,18 @@ class MockedPrinter(LineReceiver, object):
             self.info('Resetting line number')
             self.current_line = 0
 
+        if 'M104' in line or 'M140' in line:
+            x = parse.params(line)
+            if 'S' in x:
+                self.temps['T'][1] = x['S']
+                return
+
+            if 'B' in x:
+                self.temps['B'][1] = x['B']
+                return
+
+            self.warn('Unable to parse temp from {}'.format(line))
+
         if 'M105' in line:
             # ok T:25.0 /0.0 @0 T:24.4 /0.0 @0
             temp_template = '{}: {:.2f} /{:.2f} @{} '
