@@ -3,6 +3,8 @@
 # Tool for running hc_mocked_mocked printer piped to hc_server
 #
 
+export HC_CONFIG_FILE=config_mock
+
 temp=$( mktemp -d )
 
 finish() {
