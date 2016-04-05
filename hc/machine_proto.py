@@ -140,13 +140,14 @@ class MachineTalk(LineReceiver):
 
     def handle(self, line):
         # normalize
-        sl = line.strip().lower()
+        line = line.strip()
+        lowerline = line.lower()
 
-        if sl.startswith('ok'):
+        if lowerline.startswith('ok'):
             try:
                 cmd = self.ack_queue.get_nowait()
 
-                rest = sl[2:]
+                rest = line[2:]
                 if rest:
                     self.command_result_candidate.append(rest)
 
@@ -163,7 +164,7 @@ class MachineTalk(LineReceiver):
                 log.msg('more acks received')
                 pass
 
-        elif sl.startswith('rs'):
+        elif lowerline.startswith('rs'):
             self.resend_counter += 1
             log.msg('Resend requested')
             try:
@@ -198,9 +199,9 @@ class MachineTalk(LineReceiver):
             self.command_result_candidate.append(line)
 
         if self.connection_test:
-            self.handle_connection_test(sl)
+            self.handle_connection_test(line)
 
-        if sl == 'Smoothie':
+        if line == 'Smoothie':
             log.msg('Smoothie detected')
 
     def test_connection(self):
