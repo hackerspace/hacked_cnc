@@ -131,7 +131,7 @@ class MockedPrinter(LineReceiver, object):
 
     def handle_command(self, line):
         if 'G0' in line or 'G1' in line:
-            for axis, val in parse.axes(line):
+            for axis, val in parse.axes(line).items():
                 self.axes[axis] = val
 
         if 'G30' in line:

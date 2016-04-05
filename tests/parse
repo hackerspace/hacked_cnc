@@ -6,6 +6,8 @@ import hctests
 from hc import parse
 from hc import error
 
+from collections import OrderedDict
+
 
 class ParseProbeTestCase(hctests.TestCase):
     def test_parse_probe(self):
@@ -32,7 +34,7 @@ class ParseProbeTestCase(hctests.TestCase):
         }
 
         for x, y in samples.items():
-            self.assertEqual(parse.axes(x), y)
+            self.assertEqual(parse.axes(x), OrderedDict(y))
 
     def test_parse_xyz(self):
         samples = {
@@ -51,6 +53,15 @@ class ParseProbeTestCase(hctests.TestCase):
 
         for s in invalid_samples:
             self.assertEqual(parse.xyz(s), allnone)
+
+    def test_parse_params(self):
+        samples = {
+            'M104 S230': [('S', 230.0)],
+            'M140 B100.1': [('B', 100.1)],
+        }
+
+        for x, y in samples.items():
+            self.assertEqual(parse.params(x), OrderedDict(y))
 
 
 if __name__ == "__main__":
