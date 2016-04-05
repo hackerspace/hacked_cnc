@@ -23,11 +23,11 @@ def config_parser():
     return config
 
 
-def get(key):
+def get(key, default=None):
     if key in CONFIG:
         return CONFIG[key]
 
-    return None
+    return default
 
 
 def load():
@@ -41,6 +41,10 @@ def load():
                 value = int(value)
             elif value.replace('.', '').isdigit():
                 value = float(value)
+            elif value.strip().lower() == "true":
+                value = True
+            elif value.strip().lower() == "false":
+                value = False
             elif '~' in value:
                 value = os.path.expanduser(value)
 
