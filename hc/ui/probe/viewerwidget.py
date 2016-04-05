@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 # GPLv2
 import sys
 import os
