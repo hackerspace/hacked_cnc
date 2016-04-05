@@ -111,14 +111,15 @@ class MockedPrinter(LineReceiver, object):
 
             cmd, ln, crc = gcode.parse(sl)
             # FIXME: should compute checksum before parsing
-            loc_crc = gcode.checksum('N{} {}'.format(ln, cmd))
-            if loc_crc != crc:
-                self.warn('Checksum mismatch r:{} vs l:{}'.format(crc, loc_crc))
-                self.request_resend()
-                return
+            if ln and crc:
+                loc_crc = gcode.checksum('N{} {}'.format(ln, cmd))
+                if loc_crc != crc:
+                    self.warn('Checksum mismatch r:{} vs l:{}'.format(crc, loc_crc))
+                    self.request_resend()
+                    return
 
             log.msg('CC', self.current_line, ln)
-            # check for ln mismatches
+            # FIXME: check for ln mismatches
 
             self.current_line += 1
             self.handle_line(sl)
