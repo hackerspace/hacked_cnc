@@ -152,6 +152,15 @@ class MachineTalk(LineReceiver):
                     self.command_result_candidate.append(rest)
 
                 cmd.result = "\n".join(self.command_result_candidate)
+
+                # if the result is empty
+                if not len(cmd.result.strip()):
+                    cmd.result = 'ok'
+
+                # if it doesn't contain 'ok' prefix it with one
+                if not 'ok' in cmd.result:
+                    cmd.result = 'ok ' + cmd.result
+
                 self.command_result_candidate = []
 
                 reactor.callLater(0.1, cmd.d.callback, cmd)
