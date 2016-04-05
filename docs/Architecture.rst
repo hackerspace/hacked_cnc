@@ -10,7 +10,7 @@ Server
 Server handling communication between TCP clients and
 UART connections.
 
-`hc_server` application currently implements single client
+`hc_server` application currently implements multiple client
 to single UART connection or stdin communication for testing purposes.
 It runs following services:
 * UART connection to machine (default port /dev/cnc, baudrate 115200)
