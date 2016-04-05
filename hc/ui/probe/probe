@@ -2,6 +2,7 @@
 
 import sys
 import time
+import math
 
 #INIT
 import os
@@ -55,8 +56,6 @@ class QHcClient(QTcpSocket):
             return
 
         QTimer.singleShot(0, self.send_next)
-
-
 
 red = QColor(200, 0, 0)
 green = QColor(0, 200, 0)
@@ -112,6 +111,17 @@ class Main(QMainWindow):
         # prefill probe width / height
         #self.probe_area_width.setValue(self.gl.objsize[0])
         #self.probe_area_height.setValue(self.gl.objsize[1])
+
+        self.otimer = QTimer()
+        self.otimer.timeout.connect(self.gl.autoorbit)
+        #self.otimer.start(50)
+
+        fpath = '../../../gcode_samples/pcb2gcode_milling_sample.gcode'
+        self.gcode_path = fpath
+        self.gl.gcode.loadGCode(fpath)
+
+        #fpath = 'sdata0.log'
+        #self.load_probe_data(fpath)
 
     def choose_gcode(self):
         d = QFileDialog(self)
@@ -213,7 +223,7 @@ class Main(QMainWindow):
             #selectedFilter='*.txt')
 
         if fname:
-            with open(fname, 'w+') as f:
+            with open(fname, 'w') as f:
                 for time, cmd, resp in parts:
                     f.write('{}\t{}\t{}\n'.format(time, cmd, resp))
 
@@ -223,7 +233,7 @@ class Main(QMainWindow):
             if not r:
                 return
 
-            print('buffered', r)
+            #print('buffered', r)
             (idx, txt) = dec_msg(r)
             if idx is not None:
                 self.handle_response(idx, txt)
@@ -248,6 +258,7 @@ class Main(QMainWindow):
 
             buffer += r
 
+    # FIXME: unused
     def readMonitor(self):
             for chunk in txt.splitlines():
                 if chunk:
@@ -299,7 +310,7 @@ class Main(QMainWindow):
             #selectedFilter='*.txt')
 
         if fname:
-            with open(fname, 'w+') as f:
+            with open(fname, 'w') as f:
                 f.write(self.text.toPlainText())
 
     def do_connect(self):
@@ -402,6 +413,82 @@ class Main(QMainWindow):
     @pyqtSlot()
     def on_probe_clicked(self):
         self.update_probe()
+
+    @pyqtSlot()
+    def on_normalize_clicked(self):
+        res = self.gl.proberes.probe_results[:]
+        print(res)
+        sres = sorted(res, key=lambda x: x[2])
+        print(sres)
+        minz = sres[0][2]
+        maxz = sres[-1][2]
+        print("Normalizing, minz {} maxz {}".format(minz, maxz))
+
+        nres = []
+        for x, y, z in res:
+            nz = z - maxz
+            nz = abs(nz)
+            nres.append((x, y, nz))
+
+        print(nres)
+
+        self.gl.proberes.probe_results = nres
+        self.gl.proberes.update_results()
+
+    @pyqtSlot()
+    def on_process_clicked(self):
+
+        self.precision = 0.1
+
+        res = self.gl.proberes.probe_results[:]
+        if not res:
+            print("No probe results")
+            return
+
+        datapath = '/tmp/hc_probedata'
+
+        print("RES")
+        print(res)
+        with open(datapath, 'w') as f:
+            for x, y, z in res:
+                f.write("{:04.2f} {:04.2f} {:04.2f}\n".format(x, y, z))
+
+        script = '/home/rmarko/git/cnc/leveling/scale_gcode.py'
+
+        gcpath = os.path.abspath(self.gcode_path)
+        args = '{} 1-999999 --zlevel {} {:.2f}'.format(gcpath,
+                                                     datapath,
+                                                     self.precision)
+
+        args = args.split()
+        print('Calling "{}"'.format(" ".join([script] + args)))
+
+        import subprocess
+        proc = subprocess.Popen([script] + args, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, close_fds=True)
+
+        (stdout, stderr) = proc.communicate()
+
+        print("stderr:")
+        print(stderr)
+        print("stdout:")
+        print(stdout)
+
+        fpath = '/tmp/hc_postgcode'
+        with open(fpath, 'w') as f:
+            f.write(stdout)
+
+        self.gl.postgcode.loadGCode(fpath)
+
+    @pyqtSlot(int)
+    def on_exaslider_valueChanged(self, num):
+        self.gl.proberes.exaggerate = num / 10.
+        self.gl.proberes.update_results()
+
+    @pyqtSlot(int)
+    def on_offsetslider_valueChanged(self, num):
+        self.gl.proberes.offset = num / 100.
+        self.gl.proberes.update_results()
 
 app = QApplication(sys.argv)
 widget = Main()
