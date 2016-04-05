@@ -7,14 +7,18 @@ sysconfdir = "/etc"
 prefix = "/usr"
 datadir = "/usr/share"
 libdir = "/usr/lib64"
+homeconfig = os.path.expanduser("~/.hc/config")
 
 
 def config_parser():
     config = ConfigParser.SafeConfigParser()
     config_list = [os.path.join(sysconfdir, "hc", "config"),
-                   os.path.expanduser("~/.hc/config")]
+                   homeconfig]
     if "HC_CONFIG_FILE" in os.environ:
-        config_list.append(os.environ["HC_CONFIG_FILE"])
+        config_list.append(os.path.expanduser(os.environ["HC_CONFIG_FILE"]))
+
+    if "HC_MACH" in os.environ:
+        config_list.append(homeconfig + "_" + os.environ["HC_MACH"])
     config.read(config_list)
     return config
 
