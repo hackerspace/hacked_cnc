@@ -16,7 +16,7 @@ class Main(QMainWindow):
         loadUi('mainwindow.ui', self)
 
         self.host.setText("localhost")
-        self.port.setText("11011")
+        self.port.setText("11010")
         self.prompt.setText("M114")
 
         self.conn = QTcpSocket(self)

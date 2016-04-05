@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     hc.setup()
 
-    fact = hc.client.build()
+    fact = hc.monitor.build_client()
     if args.raw:
         fact.fwd_raw = dump_raw
     else:
