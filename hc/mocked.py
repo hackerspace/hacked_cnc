@@ -22,6 +22,8 @@ class MockedPrinter(LineReceiver, object):
 
     resend_next = False
 
+    temploopinterval = 1
+
     temps = collections.OrderedDict()
     temp_designators = vars.temp_designators
 
@@ -37,6 +39,9 @@ class MockedPrinter(LineReceiver, object):
 
         for d in self.axes_designators:
             self.axes[d] = 0.0
+
+        self.temploop = task.LoopingCall(self.update_temperature)
+        self.temploop.start(self.temploopinterval)
 
     def connectionMade(self):
         self.cmd('start')
@@ -147,26 +152,28 @@ class MockedPrinter(LineReceiver, object):
             self.info('Resetting line number')
             self.current_line = 0
 
-        if 'M104' in line or 'M140' in line:
+        if 'M104' in line:
             x = parse.params(line)
             if 'S' in x:
                 self.temps['T'][1] = x['S']
-                return
 
-            if 'B' in x:
-                self.temps['B'][1] = x['B']
+        if 'M140' in line:
+            x = parse.params(line)
+            if 'S' in x:
+                self.temps['B'][1] = x['S']
                 return
 
             self.warn('Unable to parse temp from {}'.format(line))
 
         if 'M105' in line:
             # ok T:25.0 /0.0 @0 T:24.4 /0.0 @0
-            temp_template = '{}: {:.2f} /{:.2f} @{} '
+            temp_template = '{}:{:.2f} /{:.2f} @{} '
             out = ''
             for designator, t in self.temps.items():
                 current, target, power = t
                 out += temp_template.format(designator, current, target, power)
-            self.cmd(out[:-1])
+            self.cmd('ok ' + out[:-1])
+            return  # don't send another ack
 
         if 'M114' in line:
             # ok C: X:0.000 Y:0.000 Z:0.000 A:192.031 B:192.031 C:192.031  E:0.000
@@ -185,6 +192,20 @@ class MockedPrinter(LineReceiver, object):
                 self.cmd('Line {}'.format(i))
 
         self.ack()
+
+    def update_temperature(self):
+        for designator, t in self.temps.items():
+            current, target, power = t
+
+            power = random.randrange(0, 255)
+            temp = random.randrange(0, 10)
+
+            if current <= target:
+                current += temp
+            elif current > target:
+                current -= temp
+
+            self.temps[designator] = [current, target, power]
 
 
 class BufferedMockedPrinter(MockedPrinter):
