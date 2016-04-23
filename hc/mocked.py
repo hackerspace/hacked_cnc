@@ -6,7 +6,7 @@ import collections
 from twisted.internet import task
 from twisted.protocols.basic import LineReceiver
 
-from . import log, gcode, parse, vars
+from . import config, log, gcode, parse, vars
 
 #from twisted.logger import Logger
 # FIXME: update to ^^ when possible
@@ -212,7 +212,7 @@ class MockedPrinter(LineReceiver, object):
 class BufferedMockedPrinter(MockedPrinter):
     max_lines = 10
     max_bytes = 256
-    interval = 0.5
+    interval = config.get('interval', 0.5)
 
     def __init__(self):
         super(BufferedMockedPrinter, self).__init__()

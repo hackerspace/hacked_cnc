@@ -12,3 +12,7 @@ server_port = 11011
 
 monitor_host = localhost
 monitor_port = 11010
+
+[mock]
+# command execution interval in seconds
+interval = 0.5
