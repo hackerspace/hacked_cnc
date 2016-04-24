@@ -21,8 +21,7 @@ from PyQt5.uic import loadUi
 from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket
 
 from hc import parse
-from hc.util import enc_msg, dec_msg
-from hc.command import Command
+from hc.util import enc_msg, dec_msg, xyzfmt
 
 import Queue
 
@@ -88,9 +87,15 @@ class Main(QMainWindow):
 
         self.connected = False
 
-        self.actionSave.triggered.connect(self.do_save)
+        self.actionSave_log.triggered.connect(self.save_log_dialog)
+
         self.actionSave_probe_data.triggered.connect(self.save_probe_data_dialog)
         self.actionLoad_probe_data.triggered.connect(self.load_probe_data_dialog)
+
+        self.actionLoad_G_code.triggered.connect(self.load_gcode_dialog)
+        self.actionSave_G_code.triggered.connect(self.save_gcode_dialog)
+
+        self.actionSave_probe_G_code.triggered.connect(self.save_probe_gcode_dialog)
 
         self.prompt.setFocus()
         self.prompt.lineEdit().returnPressed.connect(self.on_send_clicked)
@@ -116,23 +121,37 @@ class Main(QMainWindow):
         self.otimer.timeout.connect(self.gl.autoorbit)
         #self.otimer.start(50)
 
-        fpath = '../../../gcode_samples/pcb2gcode_milling_sample.gcode'
-        self.gcode_path = fpath
-        self.gl.gcode.loadGCode(fpath)
-
-        #fpath = 'sdata0.log'
-        #self.load_probe_data(fpath)
-
-    def choose_gcode(self):
+    def load_gcode_dialog(self):
         d = QFileDialog(self)
         d.setNameFilter("GCode (*.ngc *.gcode);;All files (*.*)")
         d.exec_()
         name = d.selectedFiles()[0]
         try:
-            open(name, 'r').close()
-            self.gl.loadGCode(name)
-        except IOError:
-            pass
+            self.gl.gcode.load_gcode(name)
+            self.gcode_path = name
+            print('Loaded {}'.format(name))
+        except IOError as e:
+            print('Unable to load {}'.format(name))
+            print(e)
+
+    def save_gcode_dialog(self):
+        d = QFileDialog(self)
+        d.setNameFilter("GCode (*.ngc *.gcode);;All files (*.*)")
+        d.exec_()
+        name = d.selectedFiles()[0]
+        try:
+            if self.gl.postgcode.orig:
+                self.gl.postgcode.save_gcode(name)
+                print('Saved post-processed g-code to {}'.format(name))
+            elif self.gl.gcode.orig:
+                self.gl.gcode.save_gcode(name)
+                print('Saved original g-code to {}'.format(name))
+            else:
+                print('Nothing to save')
+
+        except IOError as e:
+            print('Unable to save to {}'.format(name))
+            print(e)
 
     def append(self, text):
         self.text.append(text)
@@ -302,7 +321,7 @@ class Main(QMainWindow):
             self.err("The following error occurred: {0}"
                      .format(self.conn.errorString()))
 
-    def do_save(self):
+    def save_log_dialog(self):
         fname, sel = QFileDialog.getSaveFileName(
             self,
             'Save Log',)
@@ -312,6 +331,18 @@ class Main(QMainWindow):
         if fname:
             with open(fname, 'w') as f:
                 f.write(self.text.toPlainText())
+
+    def save_probe_gcode_dialog(self):
+        fname, sel = QFileDialog.getSaveFileName(
+            self,
+            'Save probe G-code',)
+            #'/path/to/default/directory', FIXME: lastused
+            #selectedFilter='*.txt')
+
+        if fname:
+            with open(fname, 'w') as f:
+                for code in self.gen_probe_gcode(self.get_probe_points()):
+                    f.write(code + '\n')
 
     def do_connect(self):
         self.conn.abort()
@@ -392,24 +423,25 @@ class Main(QMainWindow):
     def find_surface(self):
         self.run_cmd(probecmd)
 
+    def gen_probe_gcode(self, points):
+        for point in points:
+            yield 'G0 {}'.format(xyzfmt(*point))
+            yield probecmd
+
     @pyqtSlot()
     def on_run_probe_clicked(self):
         # clean probe result
         self.gl.proberes.probe_results = []
 
-        def xyzfmt(x, y, z):
-            return 'X{:04.2f} Y{:04.2f} Z{:04.2f}'.format(x, y, z)
-
-        probe_points = self.get_probe_points()
-        for point in probe_points:
-            self.run_cmd('G0 {}'.format(xyzfmt(*point)))
-            self.run_cmd(probecmd)
+        for code in self.gen_probe_gcode(self.get_probe_points()):
+            self.run_cmd(code)
 
     def update_probe(self):
         probe_points = self.get_probe_points()
         self.gl.probelist.probe_points = probe_points
         self.gl.probelist.update()
 
+    # FIXME: kinda redundant
     @pyqtSlot()
     def on_probe_clicked(self):
         self.update_probe()
@@ -478,7 +510,7 @@ class Main(QMainWindow):
         with open(fpath, 'w') as f:
             f.write(stdout)
 
-        self.gl.postgcode.loadGCode(fpath)
+        self.gl.postgcode.load_gcode(fpath)
 
     @pyqtSlot(int)
     def on_exaslider_valueChanged(self, num):

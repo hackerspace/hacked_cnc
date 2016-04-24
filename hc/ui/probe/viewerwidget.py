@@ -64,7 +64,7 @@ class HCViewerWidget(gl.GLViewWidget):
         self.gcode = GCode()
         self.postgcode = GCode()
 
-        #self.addItem(self.gcode)
+        self.addItem(self.gcode)
         self.addItem(self.postgcode)
 
     def autoorbit(self):

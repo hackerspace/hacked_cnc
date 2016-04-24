@@ -53,3 +53,7 @@ def trace(func):
         print('/{0}'.format(func.__name__))
         return val
     return wrapper
+
+
+def xyzfmt(x, y, z):
+    return 'X{:04.2f} Y{:04.2f} Z{:04.2f}'.format(x, y, z)

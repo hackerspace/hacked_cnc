@@ -61,7 +61,6 @@ class ProbeList(GLGraphicsItem):
 
     def update(self):
         self.list = None
-
         super(ProbeList, self).update()
 
 
@@ -109,6 +108,7 @@ class GCode(GLGraphicsItem):
     gcodesize = 0
     _oc = (0, 0, 0)
     _ogc = None
+    orig = None
 
     def object_size(self, obj):
         try:
@@ -157,15 +157,22 @@ class GCode(GLGraphicsItem):
 
         glCallList(self.list)
 
-    def loadGCode(self, filename):
+    def load_gcode(self, filename):
         if self.list:
             glDeleteLists(self.list, 1)
             self.list = None
 
-        self.gcode_points = util.load_gcode_commands(filename)
+        self.filename = filename
+        with open(filename) as fd:
+            self.orig = fd.read()
+
+        self.gcode_points = util.load_gcode_commands(self.orig)
         s = self.object_size(self.gcode_points)
 
-        self.filename = filename
         self.gcodesize = len(self.gcode_points)
         self.objsize = s
         self._recalc_object_center(self.gcode_points)
+
+    def save_gcode(self, filename):
+        with open(filename, 'w') as fd:
+            fd.write(self.orig)
