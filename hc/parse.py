@@ -1,6 +1,6 @@
 import re
 
-from . import vars
+from . import config, vars
 from .error import ParseError
 from collections import OrderedDict
 
@@ -14,12 +14,26 @@ axes_re = re.compile(des_re.format(''.join(vars.axes_designators)))
 params_re = re.compile(des_re.format(''.join(vars.param_designators)))
 
 
-def probe(x):
+def probe_linuxcnc(x):
+    """
+    Parse LinuxCNC probe result: 'Z: -4.3393123'
+
+    Returns float in mm
+    """
+
+    try:
+        return float(x[2:])
+    except:
+        ParseError('Unable to parse linuxcnc probe response: "{}"'.format(x))
+
+
+def probe_smoothie(x):
     """
     Parse probe result: 'Z:4.3393 C:44434'
 
     Returns tuple of (z, c) floats of (mm, count)
     """
+
     x = x.strip()
     match = probe_re.match(x)
 
@@ -28,6 +42,18 @@ def probe(x):
 
     z, c = match.groups()
     return (float(z), int(c))
+
+
+def probe(x):
+    """
+    Parse probe according to flavor
+    """
+
+    f = config.get('flavor', default='smoothie')
+    if f == 'smoothie':
+        return probe_smoothie(x)[0]
+    elif f == 'linuxcnc':
+        return probe_linuxcnc(x)
 
 
 def parse_re(input, target_re):

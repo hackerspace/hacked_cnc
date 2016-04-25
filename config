@@ -5,6 +5,7 @@ baudrate = 250000
 [protocol]
 numbered = false
 checksummed = false
+flavor = smoothie
 
 [net]
 server_host = localhost
