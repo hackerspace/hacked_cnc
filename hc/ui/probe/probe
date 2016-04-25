@@ -60,7 +60,7 @@ red = QColor(200, 0, 0)
 green = QColor(0, 200, 0)
 blue = QColor(0, 0, 200)
 
-probecmd = 'G30 F100'
+probecmd = 'G38.2 Z-10 F100'
 
 class Main(QMainWindow):
     current_x = 0.
@@ -183,8 +183,13 @@ class Main(QMainWindow):
             self.current_y = y
             self.current_z = z
 
-        if 'G30' in cmd:
-            z, c = parse.probe(txt)
+        if 'G38.2' in cmd:
+            try:
+                z = parse.probe(txt)
+            except:
+                print('Unable to parse probe: {}'.format(txt))
+                z = 0.0, 0.0
+
             self.gl.proberes.probe_results.append((self.current_x, self.current_y, z))
             self.gl.proberes.update_results()
 
@@ -424,9 +429,11 @@ class Main(QMainWindow):
         self.run_cmd(probecmd)
 
     def gen_probe_gcode(self, points):
+        yield 'G90'
         for point in points:
             yield 'G0 {}'.format(xyzfmt(*point))
             yield probecmd
+            yield 'G0 Z0'
 
     @pyqtSlot()
     def on_run_probe_clicked(self):
