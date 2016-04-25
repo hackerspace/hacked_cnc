@@ -13,3 +13,6 @@ server_port = 11011
 
 monitor_host = localhost
 monitor_port = 11010
+
+[probe]
+leveling_tool = scale_gcode.py

@@ -492,7 +492,7 @@ class Main(QMainWindow):
             for x, y, z in res:
                 f.write("{:04.2f} {:04.2f} {:04.2f}\n".format(x, y, z))
 
-        script = '/home/rmarko/git/cnc/leveling/scale_gcode.py'
+        script = config.get('leveling_tool', 'scale_gcode.py')
 
         gcpath = os.path.abspath(self.gcode_path)
         args = '{} 1-999999 --zlevel {} {:.2f}'.format(gcpath,
