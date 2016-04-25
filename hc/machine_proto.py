@@ -11,7 +11,6 @@ from .util import trace
 from .gcode import checksum
 
 
-COLORED = True
 DEBUG_SERIAL = False
 
 
