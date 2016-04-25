@@ -1,0 +1,30 @@
+#!/usr/bin/python2
+import argparse
+
+from twisted.python import log
+from twisted.internet import stdio, reactor
+
+import hc
+from hc import server, config, monitor
+from hc.hacks import HackedSerialPort
+from hc.linuxcnc_proto import LinuxCNC
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='hacked-cnc LinuxCNC server')
+
+    args = parser.parse_args()
+
+    hc.setup()
+
+    server = server.build()
+    monitor = monitor.build_server()
+
+    proto = LinuxCNC(server)
+    server.sr = proto
+    monitor.sr = proto
+    proto.monitor = monitor
+
+    proto.ready_cb.addErrback(log.err)
+    stdio.StandardIO(proto)
+
+    reactor.run()
