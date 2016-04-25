@@ -205,7 +205,7 @@ class Main(QMainWindow):
             #selectedFilter='*.txt')
 
         if fname:
-            self.save_probe_data(self, fname)
+            self.save_probe_data(fname)
 
     def save_probe_data(self, fname):
         with open(fname, 'w') as f:
