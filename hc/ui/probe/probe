@@ -525,6 +525,26 @@ class Main(QMainWindow):
     #    self.gl.proberes.offset = num / 100.
     #    self.gl.proberes.update_results()
 
+    @pyqtSlot(int)
+    def on_probe_rows_valueChanged(self, n):
+        self.update_probe()
+
+    @pyqtSlot(int)
+    def on_probe_cols_valueChanged(self, n):
+        self.update_probe()
+
+    @pyqtSlot(float)
+    def on_probe_margin_valueChanged(self, n):
+        self.update_probe()
+
+    @pyqtSlot(float)
+    def on_probe_area_width_valueChanged(self, n):
+        self.update_probe()
+
+    @pyqtSlot(float)
+    def on_probe_area_height_valueChanged(self, n):
+        self.update_probe()
+
 app = QApplication(sys.argv)
 widget = Main()
 widget.show()
