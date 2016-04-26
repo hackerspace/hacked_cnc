@@ -106,7 +106,7 @@ class Main(QMainWindow):
         #self.commodel = QStandardItemModel(self.comlist)
         #self.comlist.setModel(self.commodel)
         self.comtree.setColumnCount(3)
-        self.comtree.setColumnWidth(0, 180)
+        self.comtree.setColumnWidth(0, 200)
         self.comtree.setColumnWidth(1, 350)
         self.comtree.setHeaderLabels(['Time', 'Command', 'Response'])
         #self.comtree.header().setSectionResizeMode(2, QHeaderView.Stretch)
@@ -117,8 +117,8 @@ class Main(QMainWindow):
         #self.probe_area_width.setValue(self.gl.objsize[0])
         #self.probe_area_height.setValue(self.gl.objsize[1])
 
-        self.otimer = QTimer()
-        self.otimer.timeout.connect(self.gl.autoorbit)
+        #self.otimer = QTimer()
+        #self.otimer.timeout.connect(self.gl.autoorbit)
         #self.otimer.start(50)
 
     def load_gcode_dialog(self):
@@ -156,10 +156,10 @@ class Main(QMainWindow):
     def append(self, text):
         self.text.append(text)
 
-        if self.autoscroll.isChecked():
-            c = self.text.textCursor()
-            c.movePosition(QTextCursor.End, QTextCursor.MoveAnchor)
-            self.text.setTextCursor(c)
+        #if self.autoscroll.isChecked():
+        #    c = self.text.textCursor()
+        #    c.movePosition(QTextCursor.End, QTextCursor.MoveAnchor)
+        #    self.text.setTextCursor(c)
 
     def handle_response(self, idx, txt):
         root = self.comtree.invisibleRootItem()
@@ -448,31 +448,26 @@ class Main(QMainWindow):
         self.gl.probelist.probe_points = probe_points
         self.gl.probelist.update()
 
-    # FIXME: kinda redundant
-    @pyqtSlot()
-    def on_probe_clicked(self):
-        self.update_probe()
+    #@pyqtSlot()
+    #def on_normalize_clicked(self):
+    #    res = self.gl.proberes.probe_results[:]
+    #    print(res)
+    #    sres = sorted(res, key=lambda x: x[2])
+    #    print(sres)
+    #    minz = sres[0][2]
+    #    maxz = sres[-1][2]
+    #    print("Normalizing, minz {} maxz {}".format(minz, maxz))
 
-    @pyqtSlot()
-    def on_normalize_clicked(self):
-        res = self.gl.proberes.probe_results[:]
-        print(res)
-        sres = sorted(res, key=lambda x: x[2])
-        print(sres)
-        minz = sres[0][2]
-        maxz = sres[-1][2]
-        print("Normalizing, minz {} maxz {}".format(minz, maxz))
+    #    nres = []
+    #    for x, y, z in res:
+    #        nz = z - maxz
+    #        nz = abs(nz)
+    #        nres.append((x, y, nz))
 
-        nres = []
-        for x, y, z in res:
-            nz = z - maxz
-            nz = abs(nz)
-            nres.append((x, y, nz))
+    #    print(nres)
 
-        print(nres)
-
-        self.gl.proberes.probe_results = nres
-        self.gl.proberes.update_results()
+    #    self.gl.proberes.probe_results = nres
+    #    self.gl.proberes.update_results()
 
     @pyqtSlot()
     def on_process_clicked(self):
@@ -519,15 +514,15 @@ class Main(QMainWindow):
 
         self.gl.postgcode.load_gcode(fpath)
 
-    @pyqtSlot(int)
-    def on_exaslider_valueChanged(self, num):
-        self.gl.proberes.exaggerate = num / 10.
-        self.gl.proberes.update_results()
+    #@pyqtSlot(int)
+    #def on_exaslider_valueChanged(self, num):
+    #    self.gl.proberes.exaggerate = num / 10.
+    #    self.gl.proberes.update_results()
 
-    @pyqtSlot(int)
-    def on_offsetslider_valueChanged(self, num):
-        self.gl.proberes.offset = num / 100.
-        self.gl.proberes.update_results()
+    #@pyqtSlot(int)
+    #def on_offsetslider_valueChanged(self, num):
+    #    self.gl.proberes.offset = num / 100.
+    #    self.gl.proberes.update_results()
 
 app = QApplication(sys.argv)
 widget = Main()
