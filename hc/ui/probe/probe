@@ -113,10 +113,6 @@ class Main(QMainWindow):
         self.comtree.header().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self.comtree.header().setStretchLastSection(False)
 
-        # prefill probe width / height
-        #self.probe_area_width.setValue(self.gl.objsize[0])
-        #self.probe_area_height.setValue(self.gl.objsize[1])
-
         #self.otimer = QTimer()
         #self.otimer.timeout.connect(self.gl.autoorbit)
         #self.otimer.start(50)
@@ -128,6 +124,11 @@ class Main(QMainWindow):
         name = d.selectedFiles()[0]
         try:
             self.gl.gcode.load_gcode(name)
+
+            # prefill probe width / height
+            self.probe_area_width.setValue(self.gl.gcode.objsize[0])
+            self.probe_area_height.setValue(self.gl.gcode.objsize[1])
+
             self.gcode_path = name
             print('Loaded {}'.format(name))
         except IOError as e:
