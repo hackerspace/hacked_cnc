@@ -10,6 +10,9 @@ flavor = smoothie
 [net]
 server_host = localhost
 server_port = 11011
+# send 'ok' immediately after command is received by
+# the server. Required by some clients like pronterface
+immediate_ok = false
 
 monitor_host = localhost
 monitor_port = 11010
