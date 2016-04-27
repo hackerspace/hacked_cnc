@@ -138,7 +138,7 @@ class LinuxCNC(LineReceiver):
 
         if self.verbose:
             log.msg('> {0}'.format(cmd.text))
-            self.monitor.broadcast('> {0}\n'.format(cmd.text))
+            self.monitor.broadcast('> {0}'.format(cmd.text))
 
         if self.stat.interp_state == linuxcnc.INTERP_IDLE:
             self.command.mdi(cmd.text)

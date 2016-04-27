@@ -120,7 +120,7 @@ class MachineTalk(LineReceiver):
 
         if self.serial_tx_verbose:
             log.msg('> {0}'.format(cmd.text))
-            self.monitor.broadcast('> {0}\n'.format(cmd.text))
+            self.monitor.broadcast('> {0}'.format(cmd.text))
 
         self.transport.write(cmd.text)
         self.transport.write('\n')
@@ -233,7 +233,7 @@ class MachineTalk(LineReceiver):
         if self.serial_rx_verbose:
             log.msg('< {0}'.format(line))
 
-        self.monitor.broadcast('< {0}\n'.format(line))
+        self.monitor.broadcast('< {0}'.format(line))
 
         self.handle(line)
 
