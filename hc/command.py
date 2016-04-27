@@ -45,6 +45,8 @@ class Command(object):
             self.t = True
         elif f == '#':  # HC internal command
             self.internal = True
+        elif f == 'N':  # line number, already encoded
+            self.pre_encoded = self.raw
         elif f in [';', '(']:
             self.comment = True
         else:
