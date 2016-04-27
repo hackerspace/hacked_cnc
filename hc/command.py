@@ -9,6 +9,7 @@ class Command(object):
     special = False
     comment = False
     internal = False
+    unknown = False
 
     acked = False
     empty = False
@@ -50,7 +51,7 @@ class Command(object):
         elif f in [';', '(']:
             self.comment = True
         else:
-            self.special = True
+            self.uknown = True
 
     def __cmp__(self, other):
         if self.special:
