@@ -10,13 +10,22 @@ from collections import OrderedDict
 
 
 class ParseProbeTestCase(hctests.TestCase):
-    def test_parse_probe(self):
+    def test_parse_probe_smoothie(self):
         samples = {
             'Z:4.4328 C:45392': (4.4328, 45392),
         }
 
         for x, y in samples.items():
-            self.assertEqual(parse.probe(x), y)
+            self.assertEqual(parse.probe_smoothie(x), y)
+
+    def test_parse_probe_linuxcnc(self):
+        samples = {
+            'Z: 4.4328': 4.4328,
+            'Z:4.4328': 4.4328,
+        }
+
+        for x, y in samples.items():
+            self.assertEqual(parse.probe_linuxcnc(x), y)
 
     def test_parse_probe_raies(self):
         invalid_samples = [
