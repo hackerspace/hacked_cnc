@@ -43,7 +43,7 @@ class Command(object):
             self.m = True
         elif f == 'T':  # select tool
             self.t = True
-        elif f == '#':  # HC internal command
+        elif f == '/':  # HC internal command
             self.internal = True
         elif f == 'N':  # line number, already encoded
             self.pre_encoded = self.raw
