@@ -25,6 +25,7 @@ from hc.util import enc_msg, dec_msg, xyzfmt
 
 import Queue
 
+proc_events = QApplication.processEvents
 
 
 class QHcClient(QTcpSocket):
@@ -60,7 +61,7 @@ red = QColor(200, 0, 0)
 green = QColor(0, 200, 0)
 blue = QColor(0, 0, 200)
 
-probecmd = 'G38.2 Z-10 F100'
+probecmd = 'G38.2 Z{} F{}'
 
 class Main(QMainWindow):
     current_x = 0.
@@ -72,8 +73,8 @@ class Main(QMainWindow):
 
         loadUi('mainwindow.ui', self)
 
-        self.host.setText(config.get('server_host', 'localhost'))
-        self.port.setText(str(config.get('server_port', '11011')))
+        self['connection.host'] = config.get('server_host', 'localhost')
+        self['connection.port'] = str(config.get('server_port', '11011'))
         #self.prompt.setText("M114")
         self.prompt.addItem("M114")
         self.prompt.addItem("MULTILINE")
@@ -100,8 +101,22 @@ class Main(QMainWindow):
         self.prompt.setFocus()
         self.prompt.lineEdit().returnPressed.connect(self.on_send_clicked)
 
+        # paramtree handlers
+        self.ptree.params.sigTreeStateChanged.connect(self.pchange)
+        self.ptree.changing(self.changing)
+        self.ptree.params.param('Connection', 'Connect').sigActivated.connect(self.do_connect)
+        self.ptree.params.param('Probe', 'Run probe').sigActivated.connect(self.run_probe)
+        self.ptree.params.param('Probe', 'Process').sigActivated.connect(self.process)
+        self.ptree.params.param('Probe', 'Save processed G-code').sigActivated.connect(self.save_gcode_dialog)
+        self.ptree.params.param('GCode', 'Load G-code').sigActivated.connect(self.load_gcode_dialog)
+
+        # alias
+        self.p = self.ptree.get_param
+        self.ptree
+
         self.do_connect()
         self.update_probe()
+        self.update_grid()
 
         #self.commodel = QStandardItemModel(self.comlist)
         #self.comlist.setModel(self.commodel)
@@ -117,6 +132,65 @@ class Main(QMainWindow):
         #self.otimer.timeout.connect(self.gl.autoorbit)
         #self.otimer.start(50)
 
+    def __getitem__(self, attr):
+        """
+        Access HCParameTree values via self['some.path']
+        """
+
+        param = self.ptree.get_param(attr)
+        return param.value()
+
+    def __setitem__(self, attr, val):
+        """
+        Set HCParameTree values via self['some.path']
+        """
+        param = self.ptree.get_param(attr)
+        param.setValue(val)
+
+    def changing(self, param, value):
+        print('Changing {} {}'.format(param, value))
+        path = self.ptree.params.childPath(param)
+        if path is not None:
+            pl = '.'.join(path).lower()
+            self.handle_updates(pl)
+
+
+    def pchange(self, param, changes):
+        """
+        HCParamTreechange handler
+        """
+
+        for param, change, data in changes:
+            path = self.ptree.params.childPath(param)
+            if path is not None:
+                pl = '.'.join(path).lower()
+                self.handle_updates(pl)
+
+                childName = '.'.join(path)
+            else:
+                childName = param.name()
+            print('  parameter: %s'% childName)
+            print('  change:    %s'% change)
+            print('  data:      %s'% str(data))
+            print('  ----------')
+
+    def handle_updates(self, path=None):
+        if path:
+            if path.startswith('probe'):
+                self.update_probe()
+
+            if path.startswith('grid'):
+                self.update_grid()
+
+            if path.startswith('cross'):
+                self.update_cross()
+
+            if path.startswith('gcode'):
+                self.update_gcode()
+
+            if path.startswith('probe result'):
+                self.update_proberesult()
+
     def load_gcode_dialog(self):
         d = QFileDialog(self)
         d.setNameFilter("GCode (*.ngc *.gcode);;All files (*.*)")
@@ -126,8 +200,10 @@ class Main(QMainWindow):
             self.gl.gcode.load_gcode(name)
 
             # prefill probe width / height
-            self.probe_area_width.setValue(self.gl.gcode.objsize[0])
-            self.probe_area_height.setValue(self.gl.gcode.objsize[1])
+            self['probe.width'] = self.gl.gcode.objsize[0]
+            self['probe.height'] = self.gl.gcode.objsize[1]
+            self['gcode.width'] = self.gl.gcode.objsize[0]
+            self['gcode.height'] = self.gl.gcode.objsize[1]
 
             self.gcode_path = name
             print('Loaded {}'.format(name))
@@ -193,6 +269,10 @@ class Main(QMainWindow):
 
             self.gl.proberes.probe_results.append((self.current_x, self.current_y, z))
             self.gl.proberes.update_results()
+            self['probe result.lowest'] = min(self['probe result.lowest'], z)
+            self['probe result.highest'] = max(self['probe result.highest'], z)
+            self['probe result.last'] = z
+
 
     def save_probe_data_dialog(self):
         if not self.gl.proberes.probe_results:
@@ -231,6 +311,7 @@ class Main(QMainWindow):
     @pyqtSlot()
     def on_save_clicked(self):
         root = self.comtree.invisibleRootItem()
+        {'name': 'Visible', 'type': 'bool', 'value': 1},
         count = root.childCount()
 
         parts = []
@@ -352,13 +433,8 @@ class Main(QMainWindow):
 
     def do_connect(self):
         self.conn.abort()
-        self.conn.connectToHost(self.host.text(),
-                                int(self.port.text()))
-
-    @pyqtSlot()
-    def on_connect_clicked(self):
-        self.do_connect()
-        self.prompt.setFocus()
+        self.conn.connectToHost(self['connection.host'],
+                                int(self['connection.port']))
 
     @pyqtSlot()
     def on_prompt_activated(self):
@@ -379,6 +455,7 @@ class Main(QMainWindow):
 
         self.comtree.scrollToItem(item)
         self.conn.cmd(cmd)
+        proc_events()
 
     @pyqtSlot()
     def on_send_clicked(self):
@@ -388,6 +465,7 @@ class Main(QMainWindow):
         out = self.prompt.currentText()
         self.run_cmd(out)
 
+    # FIXME: should go to hc lib
     def gen_probe_grid(self, rows, cols, w, h, x_margin, y_margin, start_z):
         w = w - x_margin * 2.
         h = h - y_margin * 2.
@@ -396,7 +474,6 @@ class Main(QMainWindow):
             return []
 
         if cols == 1 or rows == 1:
-            # FIXME: finish this cornercase
             return []
 
         xstep = w / (cols - 1)
@@ -418,36 +495,56 @@ class Main(QMainWindow):
         return out
 
     def get_probe_points(self):
+        m = self['probe.margin']
         probe_points = self.gen_probe_grid(
-            self.probe_rows.value(), self.probe_cols.value(),
-            self.probe_area_width.value(), self.probe_area_height.value(),
-            self.probe_margin.value(), self.probe_margin.value(),
-            self.probe_start_z.value())
+            self['probe.rows'], self['probe.cols'],
+            self['probe.width'], self['probe.height'],
+            m, m,
+            self['probe.start z'])
 
         return probe_points
 
-    def find_surface(self):
-        self.run_cmd(probecmd)
-
     def gen_probe_gcode(self, points):
+        feed = self['probe.feedrate']
+        depth = self['probe.max depth']
+
         yield 'G90'
         for point in points:
             yield 'G0 {}'.format(xyzfmt(*point))
-            yield probecmd
+            yield probecmd.format(depth, feed)
             yield 'G0 Z0'
 
-    @pyqtSlot()
-    def on_run_probe_clicked(self):
+    def run_probe(self):
         # clean probe result
         self.gl.proberes.probe_results = []
 
         for code in self.gen_probe_gcode(self.get_probe_points()):
             self.run_cmd(code)
 
+    def update_gcode(self):
+        self.gl.gcode.setVisible(self['gcode.visible'])
+
     def update_probe(self):
         probe_points = self.get_probe_points()
         self.gl.probelist.probe_points = probe_points
         self.gl.probelist.update()
+
+    def update_proberesult(self):
+        self.gl.proberes.setVisible(self['probe result.visible'])
+
+    def update_grid(self):
+        w = self['grid.width']
+        h = self['grid.height']
+        self.gl.grid.setSize(w, h, 1)
+        self.gl.grid.resetTransform()
+        self.gl.grid.translate(w/2., h/2., -0.05)
+        self.gl.grid.setVisible(self['grid.visible'])
+
+    def update_cross(self):
+        s = self['cross.size']
+        self.gl.cross.setVisible(self['cross.visible'])
+        #self.gl.grid.setSize(w, h, 1)
+        #self.gl.grid.translate(w/2., h/2., -0.05)
 
     #@pyqtSlot()
     #def on_normalize_clicked(self):
@@ -470,14 +567,13 @@ class Main(QMainWindow):
     #    self.gl.proberes.probe_results = nres
     #    self.gl.proberes.update_results()
 
-    @pyqtSlot()
-    def on_process_clicked(self):
-
+    def process(self):
+        self.info('Processing')
         self.precision = 0.1
 
         res = self.gl.proberes.probe_results[:]
         if not res:
-            print("No probe results")
+            self.err('No probe results')
             return
 
         datapath = '/tmp/hc_probedata'
@@ -496,7 +592,8 @@ class Main(QMainWindow):
                                                      self.precision)
 
         args = args.split()
-        print('Calling "{}"'.format(" ".join([script] + args)))
+        self.info('Calling "{}"'.format(" ".join([script] + args)))
+        proc_events()
 
         import subprocess
         proc = subprocess.Popen([script] + args, stdout=subprocess.PIPE,
@@ -509,11 +606,14 @@ class Main(QMainWindow):
         print("stdout:")
         print(stdout)
 
+        self.info('Done. Saving to /tmp/hc_postgcode')
+
         fpath = '/tmp/hc_postgcode'
         with open(fpath, 'w') as f:
             f.write(stdout)
 
         self.gl.postgcode.load_gcode(fpath)
+        self.info('Loaded post-processed G-code')
 
     #@pyqtSlot(int)
     #def on_exaslider_valueChanged(self, num):
@@ -525,25 +625,6 @@ class Main(QMainWindow):
     #    self.gl.proberes.offset = num / 100.
     #    self.gl.proberes.update_results()
 
-    @pyqtSlot(int)
-    def on_probe_rows_valueChanged(self, n):
-        self.update_probe()
-
-    @pyqtSlot(int)
-    def on_probe_cols_valueChanged(self, n):
-        self.update_probe()
-
-    @pyqtSlot(float)
-    def on_probe_margin_valueChanged(self, n):
-        self.update_probe()
-
-    @pyqtSlot(float)
-    def on_probe_area_width_valueChanged(self, n):
-        self.update_probe()
-
-    @pyqtSlot(float)
-    def on_probe_area_height_valueChanged(self, n):
-        self.update_probe()
 
 app = QApplication(sys.argv)
 widget = Main()

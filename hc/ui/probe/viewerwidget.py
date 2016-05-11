@@ -38,7 +38,6 @@ class HCViewerWidget(gl.GLViewWidget):
         self.setCameraPosition(distance=40, azimuth=-90)
 
         self.grid = gl.GLGridItem()
-        self.grid.translate(10, 10, -0.01)
         self.cross = Cross()
 
         self.probelist = ProbeList()
