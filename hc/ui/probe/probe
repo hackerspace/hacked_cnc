@@ -391,7 +391,9 @@ class Main(QMainWindow):
 
     def socketConnect(self):
         self.connected = True
-        self.info("Connected")
+        self.info("Connected to {}:{}".format(self['connection.host'],
+                                              self['connection.port']))
+        self.ptree.collapse_group('connection')
 
     def socketError(self, socketError):
         if socketError == QAbstractSocket.RemoteHostClosedError:
@@ -433,8 +435,11 @@ class Main(QMainWindow):
 
     def do_connect(self):
         self.conn.abort()
+        self.info("Connecting to {}:{}".format(self['connection.host'],
+                                               self['connection.port']))
         self.conn.connectToHost(self['connection.host'],
                                 int(self['connection.port']))
+
 
     @pyqtSlot()
     def on_prompt_activated(self):
