@@ -120,7 +120,13 @@ class Main(QMainWindow):
     def on_right_on_clicked(self):
         self.action("e1")
 
-app = QApplication(sys.argv)
-widget = Main()
-widget.show()
-sys.exit(app.exec_())
+
+def main():
+    app = QApplication(sys.argv)
+    widget = Main()
+    widget.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+    main()
