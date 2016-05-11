@@ -123,6 +123,7 @@ class GCode(GLGraphicsItem):
         _x = 0.0
         _y = 0.0
         _z = 0.0
+        _l = 0.0
 
         for i, p in enumerate(self.gcode_points):
             if 'X' in p:
@@ -133,7 +134,9 @@ class GCode(GLGraphicsItem):
                 _z = p['Z']
 
             if 'L' in p:
-                glColor3f(i / float(len(self.gcode_points)), 0.5, float(p['L']))
+                _l = p['L']
+
+            glColor3f(i / float(self.gcodesize), 0.5, _l)
 
             glVertex3f(_x, _y, _z)
         glEnd()
