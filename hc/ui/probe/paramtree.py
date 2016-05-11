@@ -10,8 +10,8 @@ params = [
 
     {'name': 'GCode', 'type': 'group', 'children': [
         {'name': 'Load G-code', 'type': 'action'},
-        {'name': 'Width', 'type': 'float', 'value': 0.0, 'suffix': 'mm'},
-        {'name': 'Height', 'type': 'float', 'value': 0.0, 'suffix': 'mm'},
+        {'name': 'Width', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+        {'name': 'Height', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
         {'name': 'Visible', 'type': 'bool', 'value': 1},
     ]},
 
@@ -31,9 +31,9 @@ params = [
     ]},
 
     {'name': 'Probe Result', 'type': 'group', 'children': [
-        {'name': 'Last point', 'type': 'float', 'value': 0.0},
-        {'name': 'Lowest point', 'type': 'float', 'value': 100.0},
-        {'name': 'Highest point', 'type': 'float', 'value': -100.0},
+        {'name': 'Last point', 'type': 'float', 'value': 0.0, 'readonly': True},
+        {'name': 'Lowest point', 'type': 'float', 'value': 100.0, 'readonly': True},
+        {'name': 'Highest point', 'type': 'float', 'value': -100.0, 'readonly': True},
         {'name': 'Visible', 'type': 'bool', 'value': 1},
     ]},
 
