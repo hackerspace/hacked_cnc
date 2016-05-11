@@ -12,6 +12,8 @@ params = [
         {'name': 'Load G-code', 'type': 'action'},
         {'name': 'Width', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
         {'name': 'Height', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+        {'name': 'Min Z', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+        {'name': 'Max Z', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
         {'name': 'Visible', 'type': 'bool', 'value': 1},
     ]},
 

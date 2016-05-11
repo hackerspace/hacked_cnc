@@ -200,10 +200,15 @@ class Main(QMainWindow):
             self.gl.gcode.load_gcode(name)
 
             # prefill probe width / height
-            self['probe.width'] = self.gl.gcode.objsize[0]
-            self['probe.height'] = self.gl.gcode.objsize[1]
-            self['gcode.width'] = self.gl.gcode.objsize[0]
-            self['gcode.height'] = self.gl.gcode.objsize[1]
+            xmin, xmax = self.gl.gcode.limits['X']
+            ymin, ymax = self.gl.gcode.limits['Y']
+            zmin, zmax = self.gl.gcode.limits['Z']
+            self['probe.width'] = xmax
+            self['probe.height'] = ymax
+            self['gcode.width'] = xmax
+            self['gcode.height'] = ymax
+            self['gcode.min z'] = zmin
+            self['gcode.max z'] = zmax
 
             self.gcode_path = name
             print('Loaded {}'.format(name))

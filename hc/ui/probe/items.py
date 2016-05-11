@@ -5,6 +5,7 @@ from OpenGL.GL import *
 
 
 import util
+from hc import parse
 
 
 class Cross(GLGraphicsItem):
@@ -110,35 +111,6 @@ class GCode(GLGraphicsItem):
     _ogc = None
     orig = None
 
-    def object_size(self, obj):
-        try:
-            x = map(lambda _x: float(_x['X']), obj)
-            xmax = max(x)
-            xmn = min(x)
-
-            y = map(lambda _y: float(_y['Y']), obj)
-            ymax = max(y)
-            ymn = min(y)
-
-            z = map(lambda _z: float(_z['Z']), obj)
-            zmax = max(z)
-            zmn = min(z)
-
-            return (xmax - xmn), (ymax - ymn), (zmax - zmn)
-        except ValueError:
-            return 0, 0, 0
-
-    def _recalc_object_center(self, obj):
-        if len(obj) > 2:
-            obj = obj[1:-1]
-        x = sum(map(lambda _x: float(_x['X']), obj))
-        y = sum(map(lambda _x: float(_x['Y']), obj))
-        z = sum(map(lambda _x: float(_x['Z']), obj))
-        l = len(obj)
-        if l == 0:
-            self._oc = 0, 0, 0
-        self._oc = (x / l, y / l, z / l)
-
     def paint(self):
         self.setupGLState()
         if self.list:
@@ -148,9 +120,21 @@ class GCode(GLGraphicsItem):
         self.list = glGenLists(1)
         glNewList(self.list, GL_COMPILE) #_AND_EXECUTE)
         glBegin(GL_LINE_STRIP)
+        _x = 0.0
+        _y = 0.0
+        _z = 0.0
+
         for i, p in enumerate(self.gcode_points):
-            _x, _y, _z = map(float, [p['X'], p['Y'], p['Z']])
-            glColor3f(i / float(len(self.gcode_points)), 0.5, float(p['L']))
+            if 'X' in p:
+                _x = p['X']
+            if 'Y' in p:
+                _y = p['Y']
+            if 'Z' in p:
+                _z = p['Z']
+
+            if 'L' in p:
+                glColor3f(i / float(len(self.gcode_points)), 0.5, float(p['L']))
+
             glVertex3f(_x, _y, _z)
         glEnd()
         glEndList()
@@ -166,12 +150,8 @@ class GCode(GLGraphicsItem):
         with open(filename) as fd:
             self.orig = fd.read()
 
-        self.gcode_points = util.load_gcode_commands(self.orig)
-        s = self.object_size(self.gcode_points)
-
+        self.gcode_points, self.limits = parse.gcode(self.orig)
         self.gcodesize = len(self.gcode_points)
-        self.objsize = s
-        self._recalc_object_center(self.gcode_points)
 
     def save_gcode(self, filename):
         with open(filename, 'w') as fd:

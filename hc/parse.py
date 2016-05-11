@@ -8,7 +8,7 @@ from collections import OrderedDict
 # X123.12 = ('X', 123.12)
 # G0 = ('G', 0)
 num_re = '(-?\d+\.?\d*)'
-des_re = '([{}])' + num_re
+des_re = '([{}]):?' + num_re
 axes_re = re.compile(des_re.format(''.join(vars.axes_designators)))
 params_re = re.compile(des_re.format(''.join(vars.param_designators)))
 
@@ -110,6 +110,29 @@ def axes(input):
     [('X', 13), ('Y', 10)]
     """
     return parse_re(input, axes_re)
+
+
+def gcode(input):
+    """
+    Parse gcode lines into dicts
+    """
+    o = []
+    limits = {}
+
+    for l in input.splitlines():
+        l = l.strip()
+        c = dict(axes(l))
+        for axis, val in c.items():
+            if not axis in limits:
+                limits[axis] = (val, val)
+            else:
+                limits[axis] = (min(val, limits[axis][0]),
+                                max(val, limits[axis][1]))
+
+        o.append(c)
+
+    return o, limits
+    #return map(lambda x: dict(axes(x)), input.splitlines())
 
 
 def xyz(input):
