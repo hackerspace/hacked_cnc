@@ -1,0 +1,8 @@
+#!/usr/bin/python
+
+from hc.cli import main
+
+if __name__ == '__main__':
+    main()
+else:
+    raise NotImplementedError
