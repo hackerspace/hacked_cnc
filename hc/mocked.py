@@ -149,6 +149,14 @@ class MockedPrinter(LineReceiver, object):
 
             self.cmd('Z:{:.4f} C:{}'.format(z, c))
 
+        if 'G38.2' in line or 'G38.3' in line:
+            succ = 1
+            x = self.axes['X']
+            y = self.axes['Y']
+            z = -1.0
+            z += math.sin(x) + math.cos(y)
+            self.cmd('[PRB:{:1.3f},{:1.3f},{:1.3f}:{}]'.format(x, y, z, succ))
+
         if 'M110' in line:
             self.info('Resetting line number')
             self.current_line = 0
