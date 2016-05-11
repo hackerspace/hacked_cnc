@@ -95,3 +95,12 @@ class HCParamTree(ParameterTree):
                     return e[1]
 
             raise Exception('Ambiguous ParameterTree key {}'.format(name))
+
+    def collapse_group(self, name):
+        root = self.itemAt(0, 0)
+        for i in range(root.childCount()):
+            if root.child(i).param.name().lower() == name:
+                root.child(i).setExpanded(False)
+                return
+
+        raise Exception('ParameterTree group not found {}'.format(name))
