@@ -4,14 +4,20 @@ from . import config, vars
 from .error import ParseError
 from collections import OrderedDict
 
-probe_re = re.compile(r'Z:([^\s]+) C:([^\s]+)')
-
 # designator regexp
 # X123.12 = ('X', 123.12)
 # G0 = ('G', 0)
-des_re = r'([{}])(-?\d+\.?\d*)'
+num_re = '(-?\d+\.?\d*)'
+des_re = '([{}])' + num_re
 axes_re = re.compile(des_re.format(''.join(vars.axes_designators)))
 params_re = re.compile(des_re.format(''.join(vars.param_designators)))
+
+smoothie_old_probe_re = re.compile(r'Z:([^\s]+) C:([^\s]+)')
+grbl_probe_re = re.compile(r'\[PRB:' + ','.join([num_re]*3) + ':' + num_re + '\]')
+
+
+def strip_ok(x):
+    return x.strip('ok').strip()
 
 
 def probe_linuxcnc(x):
@@ -26,16 +32,34 @@ def probe_linuxcnc(x):
     except:
         ParseError('Unable to parse linuxcnc probe response: "{}"'.format(x))
 
+def probe_grbl(ln):
+    """
+    Parse probe result: '[PRB:99.000,99.000,-1.959:1]'
+
+    Returns tuple of (x, y, z, success) floats of (mm, mm, mm, bool)
+    """
+
+    match = grbl_probe_re.match(ln)
+
+    if match is None:
+        raise ParseError('Unable to parse probe response: "{}"'.format(ln))
+
+    x, y, z, success = match.groups()
+    return (float(x), float(y), float(z), bool(success))
+
 
 def probe_smoothie(x):
+    return probe_grbl(x)
+
+
+def probe_old_smoothie(x):
     """
     Parse probe result: 'Z:4.3393 C:44434'
 
     Returns tuple of (z, c) floats of (mm, count)
     """
 
-    x = x.strip()
-    match = probe_re.match(x)
+    match = smoothie_old_probe_re.match(x)
 
     if match is None:
         raise ParseError('Unable to parse probe response: "{}"'.format(x))
@@ -49,9 +73,13 @@ def probe(x):
     Parse probe according to flavor
     """
 
+    x = strip_ok(x)
+
     f = config.get('flavor', default='smoothie')
     if f == 'smoothie':
-        return probe_smoothie(x)[0]
+        return probe_smoothie(x)[2]
+    elif f == 'grbl':
+        return probe_grbl(x)[2]
     elif f == 'linuxcnc':
         return probe_linuxcnc(x)
 
