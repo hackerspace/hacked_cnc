@@ -73,6 +73,7 @@ class Main(QMainWindow):
 
         loadUi('mainwindow.ui', self)
 
+        self.flavor = config.get('flavor', default='smoothie')
         self['connection.host'] = config.get('server_host', 'localhost')
         self['connection.port'] = str(config.get('server_port', '11011'))
         #self.prompt.setText("M114")
@@ -153,7 +154,6 @@ class Main(QMainWindow):
         if path is not None:
             pl = '.'.join(path).lower()
             self.handle_updates(pl)
-
 
     def pchange(self, param, changes):
         """
@@ -269,8 +269,10 @@ class Main(QMainWindow):
             try:
                 z = parse.probe(txt)
             except:
-                print('Unable to parse probe: {}'.format(txt))
+                log.err('Unable to parse probe: {}'.format(txt))
+                log.err('Is your flavor ({}) correct?'.format(self.flavor))
                 z = 0.0, 0.0
+                return
 
             self.gl.proberes.probe_results.append((self.current_x, self.current_y, z))
             self.gl.proberes.update_results()
