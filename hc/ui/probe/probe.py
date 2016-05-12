@@ -519,12 +519,14 @@ class Main(QMainWindow):
     def gen_probe_gcode(self, points):
         feed = self['probe.feedrate']
         depth = self['probe.max depth']
+        sz = self['probe.start z']
 
         yield 'G90'
         for point in points:
             yield 'G0 {}'.format(xyzfmt(*point))
             yield probecmd.format(depth, feed)
-            yield 'G0 Z0'
+            # go straight up startz/2.
+            yield 'G0 Z{}'.format(sz / 2.)
 
     def run_probe(self):
         # clean probe result
