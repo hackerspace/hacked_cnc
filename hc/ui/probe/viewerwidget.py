@@ -6,7 +6,6 @@ from OpenGL.GL import *
 from PyQt5 import QtGui, uic, QtCore, QtWidgets
 from PyQt5.QtOpenGL import *
 
-import util
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import numpy as np
