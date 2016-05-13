@@ -7,7 +7,7 @@ from twisted.internet import stdio, reactor
 import hc
 from hc import server, config, monitor
 from hc.hacks import HackedSerialPort
-from hc.machine_proto import MachineTalk
+from hc.machine_proto import SerialMachine
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='hacked-cnc server')
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     server = server.build()
     monitor = monitor.build_server()
 
-    proto = MachineTalk(server)
+    proto = SerialMachine(server)
     server.sr = proto
     monitor.sr = proto
     proto.monitor = monitor

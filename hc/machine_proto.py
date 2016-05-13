@@ -13,8 +13,34 @@ from .gcode import checksum
 
 DEBUG_SERIAL = False
 
+class MachineTalk(object, LineReceiver):
 
-class MachineTalk(LineReceiver):
+    def __init__(self, srv):
+        self.srv = srv
+
+    def debug(self, msg):
+        log.msg(msg)
+        self.srv.broadcast('/debug {}'.format(msg))
+
+    def log(self, msg):
+        log.msg(msg)
+        self.srv.broadcast('/log {}'.format(msg))
+
+    def info(self, msg):
+        log.msg(msg)
+        self.srv.broadcast('/info {}'.format(msg))
+
+    def error(self, msg):
+        log.msg(msg)
+        self.srv.broadcast('/err {}'.format(msg))
+
+    def fatal(self, msg):
+        log.msg('Fatal error: {}'.format(msg))
+        self.srv.broadcast('/fatal {}'.format(msg))
+        # FIXME: what now?
+
+
+class SerialMachine(MachineTalk):
     delimiter = '\n'
     test_gcode = 'M114'
     serial_rx_verbose = True
@@ -41,11 +67,8 @@ class MachineTalk(LineReceiver):
     max_waiting_for_ack = 5
     # wrong ^^ we need to count character (256 characters for Smoothie)
 
-    def __init__(self, srv):
-        self.srv = srv
-
     def connectionMade(self):
-        log.msg('Machine {0} connected '.format(self))
+        self.log('Machine {0} connected '.format(self))
         if DEBUG_SERIAL:
             self.setRawMode()
 
@@ -60,11 +83,7 @@ class MachineTalk(LineReceiver):
         self.test_connection()
 
     def connectionLost(self, reason):
-        log.msg('Serial connection lost, reason: ', reason)
-
-    def fatal(self, msg):
-        log.msg('Fatal error: {}'.format(msg))
-        # FIXME: what now?
+        self.log('Serial connection lost, reason: ', reason)
 
     def cmd(self, cmd):
         """
@@ -120,6 +139,7 @@ class MachineTalk(LineReceiver):
 
         if self.serial_tx_verbose:
             log.msg('> {0}'.format(cmd.text))
+            self.log('"> {0}"'.format(cmd.text))
             self.monitor.broadcast('> {0}'.format(cmd.text))
 
         self.transport.write(cmd.text)
@@ -241,7 +261,7 @@ class MachineTalk(LineReceiver):
         log.msg('raw serial data:', data)
 
     def __str__(self):
-        return "Generic Machine"
+        return "Serial Machine"
 
     def quit(self):
         reactor.callLater(1, reactor.stop)

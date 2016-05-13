@@ -3,15 +3,30 @@ import Queue
 from twisted.python import log
 from twisted.internet import reactor, task
 from twisted.internet.defer import Deferred
-from twisted.protocols.basic import LineReceiver
 
 import linuxcnc
 
-from . import config
 from .command import Command
+from .machine_proto import MachineTalk
+
+MODES = {
+    linuxcnc.MODE_MANUAL: 'manual',
+    linuxcnc.MODE_AUTO: 'auto',
+    linuxcnc.MODE_MDI: 'MDI',
+}
+
+INTERP_STATES = {
+    linuxcnc.INTERP_IDLE: 'idle',
+    linuxcnc.INTERP_READING: 'reading',
+    linuxcnc.INTERP_PAUSED: 'paused',
+    linuxcnc.INTERP_WAITING: 'paused',
+}
+
+def axisnumber(letter):
+    return "xyzabcuvws".index(letter.lower())
 
 
-class LinuxCNC(LineReceiver):
+class LinuxCNC(MachineTalk):
     line = 0
     ack_queue = None
     prio_queue = None
@@ -32,13 +47,14 @@ class LinuxCNC(LineReceiver):
     poll_task = None
     stat = None
     last_line = None
+    #
+    last_interp_state = None
     # our internal state machine tracking stat.interp_status
     # to know when interpreter is idle and we can send next command
     state = None
 
-    def __init__(self, srv):
-        self.srv = srv
-        self.command = linuxcnc.command()
+    def __init__(self, *args, **kwargs):
+        super(LinuxCNC, self).__init__(*args, **kwargs)
 
     def connectionMade(self):
         log.msg('Machine {0} connected '.format(self))
@@ -51,6 +67,7 @@ class LinuxCNC(LineReceiver):
 
     def init_linuxcnc(self):
         self.stat = linuxcnc.stat()
+        self.command = linuxcnc.command()
         self.error_channel = linuxcnc.error_channel()
 
         self.stat.poll()
@@ -58,12 +75,64 @@ class LinuxCNC(LineReceiver):
         self.cmd_serial = self.serial + 1
         self.error_channel.poll()
 
+        self.last_interp_state = self.stat.interp_state
+
         self.poll_task = task.LoopingCall(self.poll_linuxcnc)
         self.poll_task.start(0.1)
         self.state = 'READY'
 
+    def reset_interpreter(self):
+        self.info('Resetting interpreter')
+        self.command.reset_inrerpreter()
+
+    def load_file(self, path):
+        self.manual_mode()
+        self.info('Loading {}'.format(path))
+        self.command.program_open(path)
+
+    def run(self):
+        self.auto_mode()
+        self.info('Running program')
+        program_start_line = 0
+        self.command.auto(linuxcnc.AUTO_RUN, program_start_line)
+
+    def jog_start(self, axis, speed):
+        self.manual_mode()
+        self.command.jog(linuxcnc.JOG_CONTINUOUS, axis, speed)
+
+    def jog_increment(self, axis, speed, distance):
+        self.manual_mode()
+        axis = axisnumber(axis)
+        self.command.jog(linuxcnc.JOG_INCREMENT, axis, speed, distance)
+
+    def jog_stop(self, axis):
+        self.manual_mode()
+        self.command.jog(linuxcnc.JOG_STOP, axis)
+
+    def switch_mode(self, mode):
+        m = MODES[mode]
+        self.log('Switching to {} mode'.format(m))
+        self.command.mode(mode)
+        self.command.wait_complete()
+        self.log('Switched to {} mode'.format(m))
+
+    def auto_mode(self):
+        self.switch_mode(linuxcnc.MODE_AUTO)
+
+    def manual_mode(self):
+        self.switch_mode(linuxcnc.MODE_MANUAL)
+
+    def mdi_mode(self):
+        self.switch_mode(linuxcnc.MODE_MDI)
+
     def poll_linuxcnc(self):
         self.stat.poll()
+        inps = self.stat.interp_state
+
+        if inps != self.last_interp_state:
+            self.debug('Interpreter stage changed to {}'.format(INTERP_STATES[self.stat.interp_state]))
+            self.last_interp_state = inps
+
         if self.state == 'BUSY' and self.stat.interp_state == linuxcnc.INTERP_IDLE:
             log.msg('now idle again')
             self.state = 'IDLE'
@@ -88,17 +157,40 @@ class LinuxCNC(LineReceiver):
                 self.ack_queue.put(cmd)
 
         error = self.error_channel.poll()
-        # FIXME: better error handling
         if error:
-            log.msg('error')
-            self.srv.broadcast('err!')
+            kind, text = error
+            if kind in (linuxcnc.NML_ERROR, linuxcnc.OPERATOR_ERROR):
+                self.error(text)
+            else:
+                self.info(text)
 
-    def connectionLost(self, reason):
-        log.msg('Serial connection lost, reason: ', reason)
+    def handle_internal(self, cmd):
+        res = 'unknown command'
 
-    def fatal(self, msg):
-        log.msg('Fatal error: {}'.format(msg))
-        # FIXME: what now?
+        if cmd.raw.startswith('/ping'):
+            res = '/pong'
+
+        if cmd.raw.startswith('/load'):
+            self.info('LOAD')
+            self.load_file('/tmp/hc_test')
+            res = 'ok'
+
+        if cmd.raw.startswith('/run'):
+            self.run()
+
+        if cmd.raw.startswith('/jog'):
+            self.jog_increment('x', 100, 1)
+            res = 'ok'
+
+        if cmd.raw.startswith('/python'):
+            log.msg(cmd.raw)
+            res = eval(cmd.raw.split(' ', 1)[1])
+
+        if cmd.raw.startswith('/version'):
+            res = '/version hacked_cnc beta'
+
+        cmd.result = res
+        reactor.callLater(0.1, cmd.d.callback, cmd)
 
     def cmd(self, cmd):
         """
@@ -109,7 +201,11 @@ class LinuxCNC(LineReceiver):
             cmd = Command(cmd)
 
         if cmd.empty or cmd.comment:
-            return
+            return cmd
+
+        if cmd.internal:
+            self.handle_internal(cmd)
+            return cmd
 
         cmd.line = self.cmd_serial
         self.cmd_serial += 1
@@ -141,6 +237,8 @@ class LinuxCNC(LineReceiver):
             self.monitor.broadcast('> {0}'.format(cmd.text))
 
         if self.stat.interp_state == linuxcnc.INTERP_IDLE:
+            if self.stat.task_mode != linuxcnc.MODE_MDI:
+                self.mdi_mode()
             self.command.mdi(cmd.text)
             self.state = 'BUSY'
         else:
