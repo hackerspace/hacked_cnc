@@ -52,6 +52,12 @@ def uimon():
     os.chdir(os.path.dirname(qtmonitor.__file__))
     qtmonitor.main()
 
+@named('pcb')
+def uipcb():
+    os.chdir(os.path.dirname(probe.__file__))
+    probe.main()
+
+# FIXME: drop after a while
 @named('probe')
 def uiprobe():
     os.chdir(os.path.dirname(probe.__file__))
@@ -100,6 +106,7 @@ def main():
         shell,
         monitor,
         uimon,
+        uipcb,
         uiprobe,
     ])
 
