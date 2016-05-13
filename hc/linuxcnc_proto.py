@@ -22,6 +22,7 @@ INTERP_STATES = {
     linuxcnc.INTERP_WAITING: 'paused',
 }
 
+
 def axisnumber(letter):
     return "xyzabcuvws".index(letter.lower())
 
@@ -70,7 +71,13 @@ class LinuxCNC(MachineTalk):
         self.command = linuxcnc.command()
         self.error_channel = linuxcnc.error_channel()
 
-        self.stat.poll()
+        try:
+            self.stat.poll()
+        except linuxcnc.error as e:
+            self.error('Unable to poll linuxcnc, is it running?')
+            self.error('Error message: {}'.format(e))
+            return
+
         self.serial = self.stat.echo_serial_number
         self.cmd_serial = self.serial + 1
         self.error_channel.poll()
@@ -126,7 +133,16 @@ class LinuxCNC(MachineTalk):
         self.switch_mode(linuxcnc.MODE_MDI)
 
     def poll_linuxcnc(self):
-        self.stat.poll()
+        # FIXME: poll regularly but don't spam logs unlike now
+        try:
+            self.stat = linuxcnc.stat()
+            self.stat.poll()
+        except linuxcnc.error as e:
+            self.error('Unable to poll linuxcnc, is it running?')
+            self.error('Error message: {}'.format(e))
+            return
+
+        #self.stat.poll()
         inps = self.stat.interp_state
 
         if inps != self.last_interp_state:
