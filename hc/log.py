@@ -2,6 +2,8 @@ import logging
 
 from twisted.python import log
 
+from . import config
+
 
 def setup(level=logging.DEBUG):
     '''
@@ -10,6 +12,12 @@ def setup(level=logging.DEBUG):
 
     observer = log.PythonLoggingObserver()
     observer.start()
-    logging.basicConfig(level=logging.DEBUG)
+    level = config.get('loglevel', 'info')
+    try:
+        l = getattr(logging, level.upper())
+    except:
+        l = logging.INFO
+
+    logging.basicConfig(level=l)
 
 msg = log.msg

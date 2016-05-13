@@ -2,6 +2,8 @@
 port = /dev/example
 baudrate = 250000
 
+loglevel = debug
+
 [protocol]
 numbered = true
 checksummed = true

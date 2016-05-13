@@ -2,6 +2,8 @@
 port = /dev/cnc
 baudrate = 250000
 
+loglevel = info
+
 [protocol]
 numbered = false
 checksummed = false
