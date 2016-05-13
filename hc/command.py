@@ -65,7 +65,7 @@ class Command(object):
     def text(self):
         if self.pre_encoded:
             return self.pre_encoded
-        elif self.special or self.empty:
+        elif self.special or self.empty or self.internal:
             return self.raw
         else:
             return self.normalized
