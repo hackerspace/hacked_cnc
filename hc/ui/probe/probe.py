@@ -129,6 +129,8 @@ class Main(QMainWindow):
         self.comtree.header().setSectionResizeMode(2, QHeaderView.ResizeToContents)
         self.comtree.header().setStretchLastSection(False)
 
+        self.reconnect_timer = QTimer()
+        self.reconnect_timer.timeout.connect(self.do_connect)
         #self.otimer = QTimer()
         #self.otimer.timeout.connect(self.gl.autoorbit)
         #self.otimer.start(50)
@@ -364,25 +366,16 @@ class Main(QMainWindow):
 
                 break
 
+            if r[0] == '/':
+                self.append('{}'.format(r.strip()))
+                continue
+
             if r[0] == '[':
                 handle(buffer)
                 buffer = r
                 continue
 
             buffer += r
-
-    # FIXME: unused
-    def readMonitor(self):
-            for chunk in txt.splitlines():
-                if chunk:
-                    if chunk[0] == '<':
-                        self.text.setTextColor(QColor(200, 0, 0))
-                    elif chunk[0] == '>':
-                        self.text.setTextColor(QColor(0, 200, 0))
-                    else:
-                        self.text.setTextColor(QColor(0, 0, 200))
-
-                    self.append(chunk)
 
     def info(self, errtext):
         self.text.setTextColor(QColor(20, 20, 20))
@@ -393,16 +386,22 @@ class Main(QMainWindow):
         self.append(errtext)
 
     def socketDisconnect(self):
-        self.connected = False
         self.err("Disconnected")
+        self.connected = False
+        self.info("Reconnecting")
+        self.reconnect_timer.start(1000)
 
     def socketConnect(self):
         self.connected = True
+        self.reconnect_timer.stop()
         self.info("Connected to {}:{}".format(self['connection.host'],
                                               self['connection.port']))
         self.ptree.collapse_group('connection')
 
     def socketError(self, socketError):
+        # backoff
+        self.reconnect_timer.setInterval(self.reconnect_timer.interval() * 2)
+
         if socketError == QAbstractSocket.RemoteHostClosedError:
             pass
         elif socketError == QAbstractSocket.HostNotFoundError:

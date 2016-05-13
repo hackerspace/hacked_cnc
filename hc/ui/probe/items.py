@@ -4,7 +4,6 @@ from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 from OpenGL.GL import *
 
 
-import util
 from hc import parse
 
 
