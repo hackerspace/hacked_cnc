@@ -7,12 +7,16 @@ import subprocess
 from argh import ArghParser, named, arg, aliases
 import argcomplete
 
+from twisted.python import log
 from twisted.internet import reactor
 
 import hc
 import hc.ui.probe.probe as probe
 import hc.ui.monitor.monitor as qtmonitor
 
+from hc import config
+from hc.hacks import HackedSerialPort
+from hc.machine_proto import SerialMachine
 
 def path_completer(prefix, parsed_args, **kwargs):
     for o in get_metrics():
@@ -29,9 +33,37 @@ def source_completer(prefix, parsed_args, **kwargs):
     for o in get_sources():
         yield o.name
 
+
+@named('server')
+def server(stdio=False, linuxcnc=False):
+    server = hc.server.build()
+    monitor = hc.monitor.build_server()
+
+    if linuxcnc:
+        from hc.linuxcnc_proto import LinuxCNC
+        from twisted.test.proto_helpers import FakeDatagramTransport
+        proto = LinuxCNC(server)
+    else:
+        proto = SerialMachine(server)
+
+    server.sr = proto
+    monitor.sr = proto
+    proto.monitor = monitor
+
+    proto.ready_cb.addErrback(log.err)
+    if stdio:
+        stdio.StandardIO(proto)
+    elif linuxcnc:
+        transport = FakeDatagramTransport()
+        proto.makeConnection(transport)
+    else:
+        HackedSerialPort(proto, config.get('port'), reactor,
+                         baudrate=config.get('baudrate'))
+
+    reactor.run()
+
 @named('monitor')
 def monitor(raw=False):
-    hc.setup()
 
     def dump(data):
         print('"{}"'.format(data))
@@ -69,6 +101,8 @@ def shell():
     IPython.embed()
 
 def main():
+    hc.setup()
+
     opt = "stdin_buffer_lines"
     buffer = 0
     buffering = False
@@ -104,6 +138,7 @@ def main():
     parser = ArghParser()
     parser.add_commands([
         shell,
+        server,
         monitor,
         uimon,
         uipcb,
