@@ -4,6 +4,7 @@ from twisted.internet.protocol import Factory
 from twisted.protocols.basic import LineReceiver
 
 from . import config
+from . import command
 from . import util
 
 
@@ -35,13 +36,13 @@ class HcServer(LineReceiver):
 
         (idx, msg) = util.dec_msg(line)
 
-        cmd = self.factory.sr.cmd(msg)
+        cmd = command.Command(msg)
+        cmd.d.addCallback(self.ack, idx)
+        self.factory.sr.cmd(cmd)
 
-        if cmd:
-            cmd.d.addCallback(self.ack, idx)
-            if config.get('immediate_ok', False):
-                log.msg('Immediate ok')
-                self.sendLine('ok')
+        if config.get('immediate_ok', False):
+            log.msg('Immediate ok')
+            self.sendLine('ok')
 
 
 class HcServerFactory(Factory):
