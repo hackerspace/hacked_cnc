@@ -86,7 +86,7 @@ class LinuxCNC(MachineTalk):
         self.command.reset_inrerpreter()
 
     def load_file(self, path):
-        self.manual_mode()
+        self.mdi_mode()
         self.info('Loading {}'.format(path))
         self.command.program_open(path)
 
@@ -147,7 +147,8 @@ class LinuxCNC(MachineTalk):
                     if self.stat.probe_tripped:
                         cmd.result = 'Z: {}'.format(self.stat.probed_position[2])
                     else:
-                        cmd.result = 'probe not tripped'
+                        self.error('Probe not tripped')
+                        cmd.result = 'error'
 
                 reactor.callLater(0.1, cmd.d.callback, cmd)
                 log.msg('acked cmd: {}'.format(cmd.text))

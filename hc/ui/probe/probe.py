@@ -269,12 +269,16 @@ class Main(QMainWindow):
 
         if 'G38.2' in cmd:
             try:
-                z = parse.probe(txt)
+                # e.g. Probe not tripped from LinuxCNC
+                # (we get error message from backend)
+                if 'error' in txt:
+                    z = -999.0
+                else:
+                    z = parse.probe(txt)
             except:
-                log.err('Unable to parse probe: {}'.format(txt))
-                log.err('Is your flavor ({}) correct?'.format(self.flavor))
-                z = 0.0, 0.0
-                return
+                self.err('Unable to parse probe: {}'.format(txt))
+                self.err('Is your flavor ({}) correct?'.format(self.flavor))
+                z = -999.0
 
             self.gl.proberes.probe_results.append((self.current_x, self.current_y, z))
             self.gl.proberes.update_results()
