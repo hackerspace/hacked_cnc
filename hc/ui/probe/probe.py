@@ -191,7 +191,10 @@ class Main(QMainWindow):
                 self.update_gcode()
 
             if path.startswith('probe result'):
-                self.update_proberesult()
+                self.update_result()
+
+            self.gl.repaint()
+            proc_events()
 
     def load_gcode_dialog(self):
         d = QFileDialog(self)
@@ -280,15 +283,15 @@ class Main(QMainWindow):
                 self.err('Is your flavor ({}) correct?'.format(self.flavor))
                 z = -999.0
 
-            self.gl.proberes.probe_results.append((self.current_x, self.current_y, z))
-            self.gl.proberes.update_results()
+            self.gl.result.data.append((self.current_x, self.current_y, z))
+            self.update_result()
             self['probe result.lowest'] = min(self['probe result.lowest'], z)
             self['probe result.highest'] = max(self['probe result.highest'], z)
             self['probe result.last'] = z
 
 
     def save_probe_data_dialog(self):
-        if not self.gl.proberes.probe_results:
+        if not self.gl.result.data:
             # err not much to save
             return
 
@@ -303,7 +306,7 @@ class Main(QMainWindow):
 
     def save_probe_data(self, fname):
         with open(fname, 'w') as f:
-            for x, y, z in self.gl.proberes.probe_results:
+            for x, y, z in self.gl.result.data:
                 f.write("{:04.2f} {:04.2f} {:04.2f}\n".format(x, y, z))
 
     def load_probe_data_dialog(self):
@@ -318,8 +321,8 @@ class Main(QMainWindow):
         with open(fname, 'r') as f:
             d = (map(lambda x: map(float, x.split()), f.readlines()))
 
-        self.gl.proberes.probe_results = d
-        self.gl.proberes.update_results()
+        self.gl.result.data = d
+        self.update_result()
 
     @pyqtSlot()
     def on_save_clicked(self):
@@ -533,7 +536,7 @@ class Main(QMainWindow):
 
     def run_probe(self):
         # clean probe result
-        self.gl.proberes.probe_results = []
+        self.gl.result.data = []
 
         for code in self.gen_probe_gcode(self.get_probe_points()):
             self.run_cmd(code)
@@ -546,8 +549,15 @@ class Main(QMainWindow):
         self.gl.probelist.probe_points = probe_points
         self.gl.probelist.update()
 
-    def update_proberesult(self):
-        self.gl.proberes.setVisible(self['probe result.visible'])
+    def update_result(self):
+        self.gl.result.setVisible(self['probe result.visible'])
+        self.gl.result.offset = self['probe result.offset']
+        self.gl.result.multiply = self['probe result.multiply']
+        self.gl.result.snapz = self['probe result.snap z']
+        self.gl.result.colormap = self['probe result.gradient']
+        self.gl.result.opts['drawEdges'] = self['probe result.draw edges']
+
+        self.gl.result.update_data()
 
     def update_grid(self):
         w = self['grid.width']
@@ -563,32 +573,11 @@ class Main(QMainWindow):
         #self.gl.grid.setSize(w, h, 1)
         #self.gl.grid.translate(w/2., h/2., -0.05)
 
-    #@pyqtSlot()
-    #def on_normalize_clicked(self):
-    #    res = self.gl.proberes.probe_results[:]
-    #    print(res)
-    #    sres = sorted(res, key=lambda x: x[2])
-    #    print(sres)
-    #    minz = sres[0][2]
-    #    maxz = sres[-1][2]
-    #    print("Normalizing, minz {} maxz {}".format(minz, maxz))
-
-    #    nres = []
-    #    for x, y, z in res:
-    #        nz = z - maxz
-    #        nz = abs(nz)
-    #        nres.append((x, y, nz))
-
-    #    print(nres)
-
-    #    self.gl.proberes.probe_results = nres
-    #    self.gl.proberes.update_results()
-
     def process(self):
         self.info('Processing')
         self.precision = 0.1
 
-        res = self.gl.proberes.probe_results[:]
+        res = self.gl.result.data[:]
         if not res:
             self.err('No probe results')
             return
@@ -631,16 +620,6 @@ class Main(QMainWindow):
 
         self.gl.postgcode.load_gcode(fpath)
         self.info('Loaded post-processed G-code')
-
-    #@pyqtSlot(int)
-    #def on_exaslider_valueChanged(self, num):
-    #    self.gl.proberes.exaggerate = num / 10.
-    #    self.gl.proberes.update_results()
-
-    #@pyqtSlot(int)
-    #def on_offsetslider_valueChanged(self, num):
-    #    self.gl.proberes.offset = num / 100.
-    #    self.gl.proberes.update_results()
 
 
 def main():

@@ -36,6 +36,11 @@ params = [
         {'name': 'Last point', 'type': 'float', 'value': 0.0, 'readonly': True},
         {'name': 'Lowest point', 'type': 'float', 'value': 100.0, 'readonly': True},
         {'name': 'Highest point', 'type': 'float', 'value': -100.0, 'readonly': True},
+        {'name': 'Offset', 'type': 'slider', 'value': 0.0},
+        {'name': 'Multiply', 'type': 'slider', 'value': 1.0},
+        {'name': 'Snap Z', 'type': 'bool', 'value': 1},
+        {'name': 'Draw edges', 'type': 'bool', 'value': 0},
+        {'name': 'Gradient', 'type': 'colormap'},
         {'name': 'Visible', 'type': 'bool', 'value': 1},
     ]},
 
