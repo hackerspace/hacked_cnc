@@ -1,3 +1,5 @@
+import inspect
+import traceback
 import Queue
 
 from twisted.python import log
@@ -7,16 +9,23 @@ from twisted.protocols.basic import LineReceiver
 
 from . import config
 from .command import Command
-from .util import trace
+from .util import trace, cmd
 from .gcode import checksum
 
-
 DEBUG_SERIAL = False
+
 
 class MachineTalk(object, LineReceiver):
 
     def __init__(self, srv):
         self.srv = srv
+        self.commands = {}
+
+        for name, value in inspect.getmembers(self):
+            if (inspect.ismethod(value) and getattr(value, '_hc_cmd', False)):
+                name = getattr(value, '_hc_name')
+                self.commands[name] = value
+                print(self.commands)
 
     def debug(self, msg):
         log.msg(msg)
@@ -38,6 +47,47 @@ class MachineTalk(object, LineReceiver):
         log.msg('Fatal error: {}'.format(msg))
         self.srv.broadcast('/fatal {}'.format(msg))
         # FIXME: what now?
+
+    def handle_internal(self, cmd):
+        parts = cmd.raw.split(' ', 1)
+
+        cmdname = parts[0][1:]
+        args = None
+        if len(parts) > 1:
+            args = parts[1]
+
+        res = 'unknown command'
+        if cmdname in self.commands:
+            try:
+                fn = self.commands[cmdname]
+                if args:
+                    res = fn(args)
+                else:
+                    res = fn()
+
+                if not res:
+                    res = 'ok'
+            except Exception as e:
+                res = 'command failed'
+                self.error('Exception while processing command {} with args {}'
+                           .format(cmdname, args))
+                self.error('Exception was {}'.format(e))
+                self.error(traceback.format_exc())
+
+        cmd.result = res
+        reactor.callLater(0, cmd.d.callback, cmd)
+
+    @cmd
+    def ping(self):
+        return '/pong'
+
+    @cmd
+    def python(self, args):
+        return eval(args)
+
+    @cmd
+    def version(self):
+        return '/version hacked_cnc beta'
 
 
 class SerialMachine(MachineTalk):
@@ -95,6 +145,10 @@ class SerialMachine(MachineTalk):
 
         if cmd.empty or cmd.comment:
             return
+
+        if cmd.internal:
+            self.handle_internal(cmd)
+            return cmd
 
         if not (cmd.special or cmd.pre_encoded):  # apply Numbering and CRC for normal commands
             out = ''

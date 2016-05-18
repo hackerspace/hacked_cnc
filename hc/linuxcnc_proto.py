@@ -1,3 +1,4 @@
+import os
 import Queue
 
 from twisted.python import log
@@ -8,6 +9,7 @@ import linuxcnc
 
 from .command import Command
 from .machine_proto import MachineTalk
+from .util import cmd
 
 MODES = {
     linuxcnc.MODE_MANUAL: 'manual',
@@ -90,18 +92,29 @@ class LinuxCNC(MachineTalk):
 
     def reset_interpreter(self):
         self.info('Resetting interpreter')
-        self.command.reset_inrerpreter()
+        self.command.reset_interpreter()
 
-    def load_file(self, path):
+    @cmd
+    def load(self, path):
+        self.reset_interpreter()
         self.mdi_mode()
-        self.info('Loading {}'.format(path))
-        self.command.program_open(path)
+        if os.path.isfile(path):
+            self.info('Loading {}'.format(path))
+            self.command.program_open(path)
+        else:
+            self.error('No such file {}'.format(path))
 
+    @cmd
     def run(self):
         self.auto_mode()
         self.info('Running program')
         program_start_line = 0
         self.command.auto(linuxcnc.AUTO_RUN, program_start_line)
+
+    @cmd
+    def jog(self, args):
+        axis, val = args.split(' ')
+        self.jog_increment(axis, 100, float(val))
 
     def jog_start(self, axis, speed):
         self.manual_mode()
@@ -183,36 +196,6 @@ class LinuxCNC(MachineTalk):
                 self.error(text)
             else:
                 self.info(text)
-
-    def handle_internal(self, cmd):
-        res = 'unknown command'
-
-        if cmd.raw.startswith('/ping'):
-            res = '/pong'
-
-        if cmd.raw.startswith('/load'):
-            self.info('LOAD')
-            self.load_file('/tmp/hc_test')
-            res = 'ok'
-
-        if cmd.raw.startswith('/run'):
-            self.run()
-
-        if cmd.raw.startswith('/jog'):
-            _, axis, val = cmd.raw.split(' ')
-
-            self.jog_increment(axis, 100, float(val))
-            res = 'ok'
-
-        if cmd.raw.startswith('/python'):
-            log.msg(cmd.raw)
-            res = eval(cmd.raw.split(' ', 1)[1])
-
-        if cmd.raw.startswith('/version'):
-            res = '/version hacked_cnc beta'
-
-        cmd.result = res
-        reactor.callLater(0, cmd.d.callback, cmd)
 
     def cmd(self, cmd):
         """

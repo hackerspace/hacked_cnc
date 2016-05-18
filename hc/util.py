@@ -4,6 +4,23 @@ import cPickle as pickle
 from .error import ParseError
 
 
+def cmd(*args, **kwargs):
+    """
+    Command decorator for protocols
+    """
+
+    def decorate(func, hidden=False, name=None):
+        setattr(func, '_hc_cmd', True)
+        setattr(func, '_hc_hidden', hidden)
+        setattr(func, '_hc_name', name or func.__name__)
+        return func
+
+    if len(args):
+        return decorate(args[0], **kwargs)
+    else:
+        return lambda func: decorate(func, **kwargs)
+
+
 def encdata(data):
     return base64.b64encode(pickle.dumps(data))
 
