@@ -1,10 +1,11 @@
 import numpy as np
+from itertools import izip
+
 import pyqtgraph.opengl as gl
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 from OpenGL.GL import *
 
-
-from hc import parse
+from hc import parse, log
 
 
 class Cross(GLGraphicsItem):
@@ -154,6 +155,9 @@ class GCode(GLGraphicsItem):
 
     def paint(self):
         self.setupGLState()
+
+        glDisable(GL_LIGHTING)
+
         if self.list:
             glCallList(self.list)
             return
@@ -200,3 +204,86 @@ class GCode(GLGraphicsItem):
     def save_gcode(self, filename):
         with open(filename, 'w') as fd:
             fd.write(self.orig)
+
+
+class Model(GLGraphicsItem):
+    list = None
+    mesh = None
+    edges = False
+    wireframe = False
+
+    def __init__(self):
+        GLGraphicsItem.__init__(self)
+
+    def load(self, path):
+        try:
+            import trimesh
+        except:
+            log.msg('trimesh not available')
+
+        # load a file by name or from a buffer
+        l = trimesh.load_mesh(path)
+        if isinstance(l, trimesh.Trimesh):
+            self.mesh = l
+        else:
+            log.msg('Unable to load mesh, multiple files loaded?')
+
+    def paint(self):
+        if not self.mesh:
+            return
+
+        self.setupGLState()
+        if self.list:
+            glCallList(self.list)
+            return
+
+        self.list = glGenLists(1)
+        glNewList(self.list, GL_COMPILE)
+        glEnable(GL_LIGHTING)
+        if self.wireframe:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        else:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+
+        glEnable(GL_COLOR_MATERIAL)
+        glColor4ub(200, 200, 255, 100)
+        self.draw_mesh_faces_flat(self.mesh, self.edges)
+        glDisable(GL_LIGHTING)
+
+        if self.edges:
+            self.draw_edges(self.mesh)
+
+        glEndList()
+        glCallList(self.list)
+
+    def draw_edges(self, mesh):
+        l = len(mesh.edges)
+
+        glBegin(GL_LINES)
+        for n, edge in enumerate(mesh.edges):
+            glColor3f(n / float(l), 0.5, 0.5)
+            edge = tuple(edge)
+            glVertex3f(*mesh.vertices[edge[0]])
+            glVertex3f(*mesh.verticess[edge[1]])
+        glEnd()
+
+    def draw_mesh_faces_flat(self, mesh, will_draw_edges=True):
+        '''
+        Takes a TriMesh parameter mesh and draws it, setting as little OpenGL state as possible.
+        Lighting and materials and colors be specified before this function is entered.
+        If the parameters indicates that edges will be drawn, then glPolygonOffset will be used.
+        '''
+
+        if will_draw_edges:
+            ## This offset guarantees that all polygon faces have a z-buffer value at least 1 greater.
+            glPolygonOffset(1.0, 1.0)
+            glEnable(GL_POLYGON_OFFSET_FILL)
+
+        glBegin(GL_TRIANGLES)
+        for face, normal in izip(mesh.faces, mesh.face_normals):
+            glNormal3f(*normal)
+            for vertex_index in face:
+                glVertex3f(*mesh.vertices[vertex_index])
+        glEnd()
+
+        glDisable(GL_POLYGON_OFFSET_FILL)
