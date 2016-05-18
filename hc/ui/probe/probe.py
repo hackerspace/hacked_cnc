@@ -576,6 +576,13 @@ class Main(QMainWindow):
 
     def update_cross(self):
         s = self['cross.size']
+        pos = []
+        for i in ['x', 'y', 'z']:
+            pos.append(self['cross.pos.{}'.format(i)])
+
+        self.gl.cross.size = s
+        self.gl.cross.resetTransform()
+        self.gl.cross.translate(*pos)
         self.gl.cross.setVisible(self['cross.visible'])
 
     def process(self):

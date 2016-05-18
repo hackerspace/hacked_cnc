@@ -9,7 +9,7 @@ from hc import parse, log
 
 
 class Cross(GLGraphicsItem):
-    cross_size = 10
+    size = 10
 
     def __init__(self):
         GLGraphicsItem.__init__(self)
@@ -17,7 +17,7 @@ class Cross(GLGraphicsItem):
     def paint(self):
         self.setupGLState()
 
-        size = self.cross_size
+        size = self.size
 
         glBegin(GL_LINES)
         glColor3f(1, 0, 0)

@@ -1,5 +1,5 @@
 import pyqtgraph.parametertree.parameterTypes as pTypes
-from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
+from pyqtgraph.parametertree import Parameter, ParameterTree, registerParameterType
 from PyQt5 import QtCore, QtWidgets
 
 params = [
@@ -50,7 +50,18 @@ params = [
         {'name': 'Height', 'type': 'float', 'value': 100.0},
         {'name': 'Visible', 'type': 'bool', 'value': 1},
     ]},
+
+    {'name': 'Cross', 'type': 'group', 'children': [
+        {'name': 'Size', 'type': 'float', 'value': 10.0},
+        {'name': 'Visible', 'type': 'bool', 'value': 1},
+        {'name': 'Position', 'type': 'group', 'children': [
+            {'name': 'X', 'type': 'float', 'value': 0.0},
+            {'name': 'Y', 'type': 'float', 'value': 0.0},
+            {'name': 'Z', 'type': 'float', 'value': 0.0},
+        ]},
+    ]},
 ]
+
 
 class SliderParameterItem(pTypes.WidgetParameterItem):
     def makeWidget(self):
@@ -75,6 +86,7 @@ class SliderParameter(Parameter):
     itemClass = SliderParameterItem
 
 registerParameterType('slider', SliderParameter, override=True)
+
 
 class HCParamTree(ParameterTree):
     def __init__(self, *args, **kwargs):
@@ -113,7 +125,7 @@ class HCParamTree(ParameterTree):
 
     def fuzzy_tree_child(self, root, name):
         c = filter(lambda x: x[0].startswith(name),
-                map(lambda x: (x[0].lower(), x[1]), root.names.items()))
+                   map(lambda x: (x[0].lower(), x[1]), root.names.items()))
 
         if len(c) == 1:
             return c[0][1]
