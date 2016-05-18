@@ -20,7 +20,7 @@ def enc_msg(txt, idx=None):
     '''
 
     if idx is not None:
-        return '[{0}]{1}\n'.format(idx, txt)
+        return '[{}]{}\n'.format(idx, txt)
 
     return txt
 
