@@ -21,6 +21,13 @@ Requirements
 * PyQt5
 * `pyqtgraph <https://github.com/pyqtgraph/pyqtgraph>`_ (latest git, develop branch)
 
+Optional
+--------
+
+* pygame
+* IPython
+* trimesh
+
 Usage
 -----
 
