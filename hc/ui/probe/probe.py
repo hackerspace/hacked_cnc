@@ -105,7 +105,6 @@ class Main(QMainWindow):
 
         # paramtree handlers
         self.ptree.params.sigTreeStateChanged.connect(self.pchange)
-        self.ptree.changing(self.changing)
         self.ptree.params.param('Connection', 'Connect').sigActivated.connect(self.do_connect)
         self.ptree.params.param('Probe', 'Run probe').sigActivated.connect(self.run_probe)
         self.ptree.params.param('Probe', 'Process').sigActivated.connect(self.process)
@@ -135,6 +134,15 @@ class Main(QMainWindow):
         #self.otimer = QTimer()
         #self.otimer.timeout.connect(self.gl.autoorbit)
         #self.otimer.start(50)
+
+
+        self.init_timer = QTimer()
+        self.init_timer.timeout.connect(self.late_init)
+        self.init_timer.setSingleShot(True)
+        self.init_timer.start(1000)
+
+    def late_init(self):
+        self.ptree.changing(self.changing)
 
     def __getitem__(self, attr):
         """
