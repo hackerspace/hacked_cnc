@@ -1,4 +1,12 @@
-from IPython.qt.console.rich_ipython_widget import RichIPythonWidget
+try:
+    from IPython.qt.console.rich_ipython_widget import RichIPythonWidget
+    # FIXME: ipython identity crises
+    # pip install qtconsole
+    # from qtconsole.rich_jupyter_widget import RichJupyterWidget
+    # from qtconsole.inprocess import QtInProcessKernelManager
+    has_ipython = True
+except:
+    has_ipython = False
 
 
 class HCIPythonWidget(RichIPythonWidget):
@@ -9,6 +17,9 @@ class HCIPythonWidget(RichIPythonWidget):
         super(HCIPythonWidget, self).__init__(*args, **kwargs)
 
     def start(self):
+        if not has_ipython:
+            return
+
         from IPython.qt.inprocess import QtInProcessKernelManager
         self.kernel_manager = kernel_manager = QtInProcessKernelManager()
         kernel_manager.start_kernel()
@@ -27,16 +38,25 @@ class HCIPythonWidget(RichIPythonWidget):
         Given a dictionary containing name / value pairs,
         push those variables to the IPython console widget
         """
+
+        if not has_ipython:
+            return
         self.kernel_manager.kernel.shell.push(variableDict)
 
     def clear(self):
         """
         Clears the terminal
         """
+
+        if not has_ipython:
+            return
         self._control.clear()
 
     def append(self, text):
         """
         Prints some plain text to the console
         """
+
+        if not has_ipython:
+            return
         self._append_plain_text(text)
