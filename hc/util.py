@@ -19,6 +19,7 @@ def enc_msg(txt, idx=None):
     [123]#ping
     '''
 
+    txt = txt.replace('\n', '\\n')
     if idx is not None:
         return '[{}]{}\n'.format(idx, txt)
 
@@ -43,6 +44,7 @@ def dec_msg(msg):
         i += 1  # skip trailing ]
 
     txt = msg[i:].strip()
+    txt = txt.replace('\\n', '\n')
     return (idx, txt)
 
 

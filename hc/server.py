@@ -52,7 +52,7 @@ class HcServerFactory(Factory):
 
     def broadcast(self, msg):
         for client in self.clients:
-            client.sendLine(msg)
+            client.sendLine(util.enc_msg(msg))
 
 
 def build():
