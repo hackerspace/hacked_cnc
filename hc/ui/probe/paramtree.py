@@ -1,5 +1,6 @@
 import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree, ParameterItem, registerParameterType
+from PyQt5 import QtCore, QtWidgets
 
 params = [
     {'name': 'Connection', 'type': 'group', 'children': [
@@ -51,6 +52,29 @@ params = [
     ]},
 ]
 
+class SliderParameterItem(pTypes.WidgetParameterItem):
+    def makeWidget(self):
+        self.hideWidget = False
+        self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
+        self.slider.sigChanged = self.slider.valueChanged
+        return self.slider
+
+    # so we don't hide displayLabel
+    def treeWidgetChanged(self):
+        super(SliderParameterItem, self).treeWidgetChanged()
+        self.displayLabel.show()
+
+    def showEditor(self):
+        pass
+
+    def hideEditor(self):
+        pass
+
+
+class SliderParameter(Parameter):
+    itemClass = SliderParameterItem
+
+registerParameterType('slider', SliderParameter, override=True)
 
 class HCParamTree(ParameterTree):
     def __init__(self, *args, **kwargs):
