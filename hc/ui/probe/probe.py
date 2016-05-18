@@ -2,21 +2,16 @@
 
 import sys
 import time
-import math
 
 #INIT
 import os
 os.environ['QT_API'] = 'pyqt5'
 #/INIT
 
-# TODO:
-# model for commands
-# separate history
-
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSlot, QTimer, Qt
-from PyQt5.QtGui import QColor, QTextCursor
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QFileDialog, QTreeWidgetItem, QHeaderView
+from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTreeWidgetItem, QHeaderView
 from PyQt5.uic import loadUi
 from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket
 
@@ -48,23 +43,13 @@ class QHcClient(QTcpSocket):
         self.write(msg)
         self.flush()
 
-        #print(msg)
-        #self.waitForBytesWritten(-1)
-
-    # FIXME: unused
-    def send_next(self):
-        try:
-            msg = self.queue.get_nowait()
-        except Queue.Empty:
-            return
-
-        QTimer.singleShot(0, self.send_next)
 
 red = QColor(200, 0, 0)
 green = QColor(0, 200, 0)
 blue = QColor(0, 0, 200)
 
 probecmd = 'G38.2 Z{} F{}'
+
 
 class Main(QMainWindow):
     current_x = 0.
@@ -83,7 +68,6 @@ class Main(QMainWindow):
         self.prompt.addItem("M114")
         self.prompt.addItem("MULTILINE")
 
-        #self.conn = QTcpSocket(self)
         self.conn = QHcClient(self)
         self.conn.readyRead.connect(self.readSocket)
         self.conn.error.connect(self.socketError)
@@ -133,9 +117,6 @@ class Main(QMainWindow):
 
         self.reconnect_timer = QTimer()
         self.reconnect_timer.timeout.connect(self.do_connect)
-        #self.otimer = QTimer()
-        #self.otimer.timeout.connect(self.gl.autoorbit)
-        #self.otimer.start(50)
 
         joystick = False
 
@@ -190,14 +171,6 @@ class Main(QMainWindow):
             if path is not None:
                 pl = '.'.join(path).lower()
                 self.handle_updates(pl)
-
-                childName = '.'.join(path)
-            else:
-                childName = param.name()
-            print('  parameter: %s'% childName)
-            print('  change:    %s'% change)
-            print('  data:      %s'% str(data))
-            print('  ----------')
 
     def handle_updates(self, path=None):
         if path:
@@ -266,11 +239,6 @@ class Main(QMainWindow):
     def append(self, text):
         self.text.append(text)
 
-        #if self.autoscroll.isChecked():
-        #    c = self.text.textCursor()
-        #    c.movePosition(QTextCursor.End, QTextCursor.MoveAnchor)
-        #    self.text.setTextCursor(c)
-
     def handle_response(self, idx, txt):
         root = self.comtree.invisibleRootItem()
         item = root.child(idx)
@@ -279,7 +247,6 @@ class Main(QMainWindow):
         if not txt:
             txt = 'ok'
         item.setText(2, txt)
-        #item.setBackground(0, QtGui.QBrush(green))
         item.setCheckState(0, Qt.Checked)
         self.comtree.scrollToItem(item)
 
@@ -313,7 +280,6 @@ class Main(QMainWindow):
             self['probe result.lowest'] = min(self['probe result.lowest'], z)
             self['probe result.highest'] = max(self['probe result.highest'], z)
             self['probe result.last'] = z
-
 
     def save_probe_data_dialog(self):
         if not self.gl.result.data:
@@ -375,7 +341,6 @@ class Main(QMainWindow):
                     f.write('{}\t{}\t{}\n'.format(time, cmd, resp))
 
     def readSocket(self):
-
         def handle(r):
             if not r:
                 return
@@ -479,10 +444,9 @@ class Main(QMainWindow):
         self.conn.connectToHost(self['connection.host'],
                                 int(self['connection.port']))
 
-
     @pyqtSlot()
     def on_prompt_activated(self):
-        print("LAA")
+        pass
 
     def run_cmd(self, cmd):
         item = QTreeWidgetItem(self.comtree)
@@ -493,7 +457,6 @@ class Main(QMainWindow):
         for i in range(3):
             item.setTextAlignment(i, Qt.AlignTop)
 
-        item.setForeground(1, QtGui.QBrush(blue))
         item.setForeground(1, QtGui.QBrush(green))
         item.setForeground(2, QtGui.QBrush(red))
 
@@ -590,14 +553,12 @@ class Main(QMainWindow):
         h = self['grid.height']
         self.gl.grid.setSize(w, h, 1)
         self.gl.grid.resetTransform()
-        self.gl.grid.translate(w/2., h/2., -0.05)
+        self.gl.grid.translate(w / 2., h / 2., -0.05)
         self.gl.grid.setVisible(self['grid.visible'])
 
     def update_cross(self):
         s = self['cross.size']
         self.gl.cross.setVisible(self['cross.visible'])
-        #self.gl.grid.setSize(w, h, 1)
-        #self.gl.grid.translate(w/2., h/2., -0.05)
 
     def process(self):
         self.info('Processing')
@@ -610,7 +571,6 @@ class Main(QMainWindow):
 
         datapath = '/tmp/hc_probedata'
 
-        print("RES")
         print(res)
         with open(datapath, 'w') as f:
             for x, y, z in res:
@@ -620,8 +580,8 @@ class Main(QMainWindow):
 
         gcpath = os.path.abspath(self.gcode_path)
         args = '{} 1-999999 --zlevel {} {:.2f}'.format(gcpath,
-                                                     datapath,
-                                                     self.precision)
+                                                       datapath,
+                                                       self.precision)
 
         args = args.split()
         self.info('Calling "{}"'.format(" ".join([script] + args)))
