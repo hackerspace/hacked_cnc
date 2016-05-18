@@ -125,7 +125,7 @@ class Main(QMainWindow):
         #self.comlist.setModel(self.commodel)
         self.comtree.setColumnCount(3)
         self.comtree.setColumnWidth(0, 200)
-        self.comtree.setColumnWidth(1, 350)
+        self.comtree.setColumnWidth(1, 100)
         self.comtree.setHeaderLabels(['Time', 'Command', 'Response'])
         #self.comtree.header().setSectionResizeMode(2, QHeaderView.Stretch)
         self.comtree.header().setSectionResizeMode(2, QHeaderView.ResizeToContents)
