@@ -172,8 +172,11 @@ class Main(QMainWindow):
         if path is not None:
             pl = '.'.join(path).lower()
             # cache changes, eval `value` to param.type
-            print(param.type())
-            self.changes[pl] = eval('{}({})'.format(param.type(), value))
+            try:
+                # will fail for complex types like colormap so just ignore
+                self.changes[pl] = eval('{}({})'.format(param.type(), value))
+            except:
+                pass
             self.handle_updates(pl)
 
     def pchange(self, param, changes):
