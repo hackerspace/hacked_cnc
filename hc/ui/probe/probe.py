@@ -262,6 +262,8 @@ class Main(QMainWindow):
 
         cmd = item.text(1)
 
+        proc_events()
+
         if 'G0' in cmd:
             x, y, z = parse.xyz(cmd[2:])
             # should probably emit signals
