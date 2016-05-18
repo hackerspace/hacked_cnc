@@ -23,6 +23,8 @@ from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket
 from hc import config, parse
 from hc.util import enc_msg, dec_msg, xyzfmt
 
+from joystick import Joystick
+
 import Queue
 
 proc_events = QApplication.processEvents
@@ -135,6 +137,12 @@ class Main(QMainWindow):
         #self.otimer.timeout.connect(self.gl.autoorbit)
         #self.otimer.start(50)
 
+        joystick = False
+
+        if joystick:
+            self.joy = Joystick()
+            self.joy.button_down.connect(self.button_down)
+            self.joy.axis_moving.connect(self.axis_moving)
 
         self.init_timer = QTimer()
         self.init_timer.timeout.connect(self.late_init)
@@ -631,6 +639,20 @@ class Main(QMainWindow):
 
         self.gl.postgcode.load_gcode(fpath)
         self.info('Loaded post-processed G-code')
+
+    # joystick handlers
+    def axis_moving(self, axis, value):
+        #self.run_cmd('G91')
+        m = ['x', 'y', 'z', 'a']
+        if abs(value) < 0.1:
+            return
+
+        value = value / 10
+        #self.run_cmd('G0 {}{}'.format(m[axis], value))
+        self.run_cmd('/jog {} {:04.2f}'.format(m[axis], value))
+
+    def button_down(self, button):
+        pass
 
 
 def main():
