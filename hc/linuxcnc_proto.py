@@ -199,7 +199,9 @@ class LinuxCNC(MachineTalk):
             self.run()
 
         if cmd.raw.startswith('/jog'):
-            self.jog_increment('x', 100, 1)
+            _, axis, val = cmd.raw.split(' ')
+
+            self.jog_increment(axis, 100, float(val))
             res = 'ok'
 
         if cmd.raw.startswith('/python'):
