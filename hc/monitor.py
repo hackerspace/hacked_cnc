@@ -74,8 +74,8 @@ def build_client(connected_cb=None, disconnected_cb=None):
     f.connected_cb = connected_cb
     f.disconnected_cb = disconnected_cb
 
-    reactor.connectTCP(config.get('monitor_host'),
-                       config.get('monitor_port'), f)
+    reactor.connectTCP(config.get('monitor_host', 'localhost'),
+                       config.get('monitor_port', 11010), f)
 
     return f
 
@@ -108,6 +108,6 @@ class HcMonitorFactory(Factory):
 
 def build_server():
     f = HcMonitorFactory()
-    reactor.listenTCP(config.get('monitor_port'), f)
+    reactor.listenTCP(config.get('monitor_port', 11010), f)
 
     return f

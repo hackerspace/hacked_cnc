@@ -57,6 +57,6 @@ class HcServerFactory(Factory):
 
 def build():
     f = HcServerFactory()
-    reactor.listenTCP(config.get('server_port'), f)
+    reactor.listenTCP(config.get('server_port', 11011), f)
 
     return f

@@ -57,8 +57,8 @@ def server(stdio=False, linuxcnc=False):
         transport = FakeDatagramTransport()
         proto.makeConnection(transport)
     else:
-        HackedSerialPort(proto, config.get('port'), reactor,
-                         baudrate=config.get('baudrate'))
+        HackedSerialPort(proto, config.get('port', 11011), reactor,
+                         baudrate=config.get('baudrate', 115200))
 
     reactor.run()
 
