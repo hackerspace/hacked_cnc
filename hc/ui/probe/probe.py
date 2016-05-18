@@ -44,6 +44,7 @@ class QHcClient(QTcpSocket):
         msg = enc_msg(ec, self.n)
         self.n += 1
         self.write(msg)
+        self.flush()
 
         #print(msg)
         #self.waitForBytesWritten(-1)
