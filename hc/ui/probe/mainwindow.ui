@@ -58,6 +58,12 @@
          </property>
         </widget>
         <widget class="QSplitter" name="splitter">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -72,35 +78,90 @@
          <widget class="QWidget" name="layoutWidget_2">
           <layout class="QVBoxLayout" name="combox">
            <property name="spacing">
-            <number>6</number>
+            <number>0</number>
            </property>
            <item>
-            <widget class="QTreeWidget" name="comtree">
-             <property name="verticalScrollMode">
-              <enum>QAbstractItemView::ScrollPerPixel</enum>
+            <widget class="QTabWidget" name="tabWidget">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-             <property name="columnCount">
-              <number>3</number>
+             <property name="currentIndex">
+              <number>0</number>
              </property>
-             <column>
-              <property name="text">
-               <string notr="true">1</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string notr="true">2</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string notr="true">3</string>
-              </property>
-             </column>
+             <widget class="QWidget" name="tab">
+              <attribute name="title">
+               <string>Comm</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout">
+               <item>
+                <widget class="QTreeWidget" name="comtree">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="verticalScrollMode">
+                  <enum>QAbstractItemView::ScrollPerPixel</enum>
+                 </property>
+                 <property name="columnCount">
+                  <number>3</number>
+                 </property>
+                 <attribute name="headerDefaultSectionSize">
+                  <number>50</number>
+                 </attribute>
+                 <column>
+                  <property name="text">
+                   <string notr="true">1</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string notr="true">2</string>
+                  </property>
+                 </column>
+                 <column>
+                  <property name="text">
+                   <string notr="true">3</string>
+                  </property>
+                 </column>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="tab_2">
+              <attribute name="title">
+               <string>Control</string>
+              </attribute>
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_3">
+                 <item>
+                  <widget class="QPushButton" name="pushButton">
+                   <property name="text">
+                    <string>PushButton</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+             <widget class="HCIPythonWidget" name="ipy">
+              <attribute name="title">
+               <string>IPython</string>
+              </attribute>
+             </widget>
             </widget>
            </item>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout">
+             <property name="spacing">
+              <number>6</number>
+             </property>
              <item>
               <widget class="QLabel" name="label_3">
                <property name="text">
@@ -214,6 +275,11 @@
     <string>Sav&amp;e log</string>
    </property>
   </action>
+  <action name="actionIPython_shell">
+   <property name="text">
+    <string>IPython shell</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
@@ -227,6 +293,12 @@
    <class>HCParamTree</class>
    <extends>QWidget</extends>
    <header>paramtree.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HCIPythonWidget</class>
+   <extends>QWidget</extends>
+   <header>ipythonwidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
