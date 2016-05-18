@@ -393,7 +393,8 @@ class Main(QMainWindow):
                 break
 
             if r[0] == '/':
-                self.append('{}'.format(r.strip()))
+                _, msg = dec_msg(r)
+                self.append('{}'.format(msg))
                 continue
 
             if r[0] == '[':
