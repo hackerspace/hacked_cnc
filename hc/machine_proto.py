@@ -183,7 +183,7 @@ class SerialMachine(MachineTalk):
 
                 self.command_result_candidate = []
 
-                reactor.callLater(0.1, cmd.d.callback, cmd)
+                reactor.callLater(0, cmd.d.callback, cmd)
                 log.msg('acked cmd: {}'.format(cmd.text))
                 log.msg('cmd result: {}'.format(cmd.result))
                 self.sent.append(cmd)

@@ -169,7 +169,7 @@ class LinuxCNC(MachineTalk):
                         self.error('Probe not tripped')
                         cmd.result = 'error'
 
-                reactor.callLater(0.1, cmd.d.callback, cmd)
+                reactor.callLater(0, cmd.d.callback, cmd)
                 log.msg('acked cmd: {}'.format(cmd.text))
                 self.try_tx()
             else:
@@ -210,7 +210,7 @@ class LinuxCNC(MachineTalk):
             res = '/version hacked_cnc beta'
 
         cmd.result = res
-        reactor.callLater(0.1, cmd.d.callback, cmd)
+        reactor.callLater(0, cmd.d.callback, cmd)
 
     def cmd(self, cmd):
         """
