@@ -1,5 +1,4 @@
 try:
-    0/0
     from IPython.qt.console.rich_ipython_widget import RichIPythonWidget
     widget = RichIPythonWidget
     # FIXME: ipython identity crises
