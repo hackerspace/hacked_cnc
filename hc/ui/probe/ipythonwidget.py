@@ -1,15 +1,19 @@
 try:
+    0/0
     from IPython.qt.console.rich_ipython_widget import RichIPythonWidget
+    widget = RichIPythonWidget
     # FIXME: ipython identity crises
     # pip install qtconsole
     # from qtconsole.rich_jupyter_widget import RichJupyterWidget
     # from qtconsole.inprocess import QtInProcessKernelManager
     has_ipython = True
 except:
+    from PyQt5.QtWidgets import QWidget
+    widget = QWidget
     has_ipython = False
 
 
-class HCIPythonWidget(RichIPythonWidget):
+class HCIPythonWidget(widget):
     editor = 'gvim'
     gui_completion = 'droplist'
 
