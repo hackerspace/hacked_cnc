@@ -147,10 +147,16 @@ class Main(QMainWindow):
         self.init_timer = QTimer()
         self.init_timer.timeout.connect(self.late_init)
         self.init_timer.setSingleShot(True)
-        self.init_timer.start(1000)
+        self.init_timer.start(333)
 
     def late_init(self):
         self.ptree.changing(self.changing)
+        self.tool_ipython()
+
+    def tool_ipython(self):
+        self.ipy.start()
+        self.ipy.push({"self": self})
+        #self.ipy.execute('%pylab inline')
 
     def __getitem__(self, attr):
         """
