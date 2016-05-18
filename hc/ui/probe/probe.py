@@ -55,6 +55,7 @@ class Main(QMainWindow):
     current_x = 0.
     current_y = 0.
     current_z = 0.
+    changes = dict()
 
     def __init__(self, *args):
         super(Main, self).__init__(*args)
@@ -142,9 +143,17 @@ class Main(QMainWindow):
     def __getitem__(self, attr):
         """
         Access HCParameTree values via self['some.path']
+
+        Returns cached value from self.changes if parameter is changing
         """
 
         param = self.ptree.get_param(attr)
+        path = self.ptree.params.childPath(param)
+        if path is not None:
+            pl = '.'.join(path).lower()
+            if pl in self.changes:
+                return self.changes[pl]
+
         return param.value()
 
     def __setitem__(self, attr, val):
@@ -155,10 +164,16 @@ class Main(QMainWindow):
         param.setValue(val)
 
     def changing(self, param, value):
-        print('Changing {} {}'.format(param, value))
+        '''
+        Keep track of changing parameters
+        and store these in self.changes dict
+        '''
         path = self.ptree.params.childPath(param)
         if path is not None:
             pl = '.'.join(path).lower()
+            # cache changes, eval `value` to param.type
+            print(param.type())
+            self.changes[pl] = eval('{}({})'.format(param.type(), value))
             self.handle_updates(pl)
 
     def pchange(self, param, changes):
@@ -170,6 +185,9 @@ class Main(QMainWindow):
             path = self.ptree.params.childPath(param)
             if path is not None:
                 pl = '.'.join(path).lower()
+                if pl in self.changes:
+                    del self.changes[pl]
+
                 self.handle_updates(pl)
 
     def handle_updates(self, path=None):
