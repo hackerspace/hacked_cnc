@@ -117,6 +117,9 @@ class LinuxCNC(MachineTalk):
         self.command.jog(linuxcnc.JOG_STOP, axis)
 
     def switch_mode(self, mode):
+        if self.stat.task_mode == mode:
+            return
+
         m = MODES[mode]
         self.log('Switching to {} mode'.format(m))
         self.command.mode(mode)
