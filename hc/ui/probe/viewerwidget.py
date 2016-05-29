@@ -45,7 +45,7 @@ class HCViewerWidget(gl.GLViewWidget):
         self.opts['fov'] = 90
         self.setCameraPosition(distance=15, elevation=20, azimuth=-90)
 
-        self.grid = HCGridItem()
+        self.grid = Grid()
         self.cross = Cross()
 
         self.probelist = ProbeList()

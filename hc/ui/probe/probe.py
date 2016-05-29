@@ -576,6 +576,7 @@ class Main(QMainWindow):
         self.gl.grid.resetTransform()
         self.gl.grid.translate(w / 2., h / 2., -0.05)
         self.gl.grid.setVisible(self['grid.visible'])
+        self.gl.grid.redraw()
 
     def update_cross(self):
         s = self['cross.size']

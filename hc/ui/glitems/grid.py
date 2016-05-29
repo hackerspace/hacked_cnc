@@ -4,14 +4,16 @@ from OpenGL.GL import *
 from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
 from PyQt5 import QtGui
 
+from hc.ui.glitems import displaylist, HCItem
 
-class HCGridItem(GLGraphicsItem):
+# based on pyqtgraphs's grid
+class Grid(HCItem):
     """
     Displays a wire-grame grid.
     """
 
     def __init__(self, size=None, color=None, antialias=True, glOptions='translucent'):
-        GLGraphicsItem.__init__(self)
+        super(Grid, self).__init__()
         self.setGLOptions(glOptions)
         self.antialias = antialias
         if size is None:
@@ -49,6 +51,7 @@ class HCGridItem(GLGraphicsItem):
     def spacing(self):
         return self.__spacing[:]
 
+    @displaylist
     def paint(self):
         self.setupGLState()
 
