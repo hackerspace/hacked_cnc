@@ -4,10 +4,9 @@ from OpenGL.GL import *
 from PyQt5.QtOpenGL import *
 from PyQt5 import QtGui
 
-import pyqtgraph.opengl as gl
+import pyqtgraph.opengl as pygl
 import numpy as np
 
-from items import *
 from hc.ui.glitems import *
 
 
@@ -22,7 +21,7 @@ def _gl_vector(array, *args):
     return vector
 
 
-class HCViewerWidget(gl.GLViewWidget):
+class HCViewerWidget(pygl.GLViewWidget):
     ele = 0
     azi = 0
     gcodelist = -1
@@ -71,6 +70,18 @@ class HCViewerWidget(gl.GLViewWidget):
         self.model = Model()
         self.addItem(self.model)
 
+        self.ruler = Ruler()
+        self.ruler.translate(0, -3, 0)
+        self.addItem(self.ruler)
+
+        self.yruler = YRuler()
+        self.yruler.translate(-3, 0, 0)
+        self.addItem(self.yruler)
+
+        self.zruler = ZRuler()
+        self.zruler.translate(-3, -3, 0)
+        self.addItem(self.zruler)
+
     def autoorbit(self):
         self.ele += 0
         self.azi += 0.1
@@ -82,6 +93,7 @@ class HCViewerWidget(gl.GLViewWidget):
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_MULTISAMPLE)
         glEnable(GL_CULL_FACE)
+        glEnable(GL_LIGHTING)
         glEnable(GL_LIGHT0)
         glEnable(GL_LIGHT1)
 
@@ -91,6 +103,8 @@ class HCViewerWidget(gl.GLViewWidget):
         glLightfv(GL_LIGHT1, GL_POSITION, _gl_vector(1, 0, .5, 0))
         glLightfv(GL_LIGHT1, GL_DIFFUSE, _gl_vector(.5, .5, .5, 1))
         glLightfv(GL_LIGHT1, GL_SPECULAR, _gl_vector(1, 1, 1, 1))
+
+        glShadeModel(GL_SMOOTH)
 
         glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE)
         glEnable(GL_COLOR_MATERIAL)
@@ -104,3 +118,12 @@ class HCViewerWidget(gl.GLViewWidget):
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_CULL_FACE)
+        glCullFace(GL_FRONT)
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+
+    def paintGL(self, *args, **kwargs):
+        super(HCViewerWidget, self).paintGL(*args, **kwargs)
+        # FIXME: we can render texts over gl
+        #self.renderText(20, 20, 'X:   0.000')
+        #self.renderText(20, 40, 'Y:   0.000')
+        #self.renderText(20, 60, 'Z:  -1.000')

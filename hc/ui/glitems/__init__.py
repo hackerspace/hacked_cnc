@@ -33,4 +33,11 @@ class HCItem(GLGraphicsItem, object):
         self._display_list = None
 
 
+from cross import Cross
+from gcode import GCode
 from grid import Grid
+from model import Model
+from text import Text
+from ruler import Ruler, YRuler, ZRuler
+from probelist import ProbeList
+from proberesult import ProbeResult

@@ -1,10 +1,10 @@
 import numpy as np
 
-from OpenGL.GL import *
-from pyqtgraph.opengl.GLGraphicsItem import GLGraphicsItem
+import OpenGL.GL as gl
 from PyQt5 import QtGui
 
 from hc.ui.glitems import displaylist, HCItem
+
 
 # based on pyqtgraphs's grid
 class Grid(HCItem):
@@ -56,22 +56,22 @@ class Grid(HCItem):
         self.setupGLState()
 
         if self.antialias:
-            glEnable(GL_LINE_SMOOTH)
-            glEnable(GL_BLEND)
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-        glBegin(GL_LINES)
+            gl.glEnable(gl.GL_LINE_SMOOTH)
+            gl.glEnable(gl.GL_BLEND)
+            gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+            gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_NICEST)
+        gl.glBegin(gl.GL_LINES)
 
         x, y, z = self.size()
         xs, ys, zs = self.spacing()
         xvals = np.arange(-x / 2., x / 2. + xs * 0.001, xs)
         yvals = np.arange(-y / 2., y / 2. + ys * 0.001, ys)
-        glColor4f(1, 0.5, 0.5, .3)
+        gl.glColor4f(1, 0.5, 0.5, .3)
         for x in xvals:
-            glVertex3f(x, yvals[0], 0)
-            glVertex3f(x,  yvals[-1], 0)
+            gl.glVertex3f(x, yvals[0], 0)
+            gl.glVertex3f(x,  yvals[-1], 0)
         for y in yvals:
-            glVertex3f(xvals[0], y, 0)
-            glVertex3f(xvals[-1], y, 0)
+            gl.glVertex3f(xvals[0], y, 0)
+            gl.glVertex3f(xvals[-1], y, 0)
 
-        glEnd()
+        gl.glEnd()
