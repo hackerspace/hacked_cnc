@@ -20,6 +20,7 @@ Requirements
 * twisted
 * PyQt5
 * `pyqtgraph <https://github.com/pyqtgraph/pyqtgraph>`_ (latest git, develop branch)
+* freetype-py
 
 Optional
 --------
