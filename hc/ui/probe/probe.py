@@ -232,6 +232,25 @@ class Main(QMainWindow):
             self['gcode.height'] = ymax
             self['gcode.min z'] = zmin
             self['gcode.max z'] = zmax
+            o = 3
+
+            self.gl.ruler.x = xmin
+            self.gl.ruler.size = xmax - xmin
+            self.gl.ruler.reset()
+            self.gl.ruler.translate(xmin, ymin - o, zmin)
+            self.gl.ruler.redraw()
+
+            self.gl.yruler.y = ymin
+            self.gl.yruler.size = ymax - ymin
+            self.gl.yruler.reset()
+            self.gl.yruler.translate(xmin - o, ymin, zmin)
+            self.gl.yruler.redraw()
+
+            self.gl.zruler.z = zmin
+            self.gl.zruler.size = zmax - zmin
+            self.gl.zruler.reset()
+            self.gl.zruler.translate(xmin - o, ymin - o, zmin)
+            self.gl.zruler.redraw()
 
             self.gcode_path = name
             print('Loaded {}'.format(name))
