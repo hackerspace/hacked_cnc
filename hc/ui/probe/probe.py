@@ -210,6 +210,7 @@ class Main(QMainWindow):
             if path.startswith('probe result'):
                 self.update_result()
 
+            self.gl.paintGL()
             self.gl.repaint()
             proc_events()
 
@@ -557,7 +558,7 @@ class Main(QMainWindow):
     def update_probe(self):
         probe_points = self.get_probe_points()
         self.gl.probelist.probe_points = probe_points
-        self.gl.probelist.update()
+        self.gl.probelist.redraw()
 
     def update_result(self):
         self.gl.result.setVisible(self['probe result.visible'])
@@ -585,6 +586,7 @@ class Main(QMainWindow):
             pos.append(self['cross.pos.{}'.format(i)])
 
         self.gl.cross.size = s
+        self.gl.cross.redraw()
         self.gl.cross.resetTransform()
         self.gl.cross.translate(*pos)
         self.gl.cross.setVisible(self['cross.visible'])
