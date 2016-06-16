@@ -10,7 +10,7 @@ os.environ['QT_API'] = 'pyqt5'
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSlot, QTimer, Qt
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QTextCursor
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QTreeWidgetItem, QHeaderView
 from PyQt5.uic import loadUi
 from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket
@@ -279,6 +279,9 @@ class Main(QMainWindow):
 
     def append(self, text):
         self.text.append(text)
+        c = self.text.textCursor()
+        c.movePosition(QTextCursor.End, QTextCursor.MoveAnchor)
+        self.text.setTextCursor(c)
 
     def handle_response(self, idx, txt):
         root = self.comtree.invisibleRootItem()
