@@ -11,10 +11,17 @@ params = [
 
     {'name': 'GCode', 'type': 'group', 'children': [
         {'name': 'Load G-code', 'type': 'action'},
-        {'name': 'Width', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
-        {'name': 'Height', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
-        {'name': 'Min Z', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
-        {'name': 'Max Z', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+        {'name': 'Limits', 'type': 'group', 'children': [
+            {'name': 'X min', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+            {'name': 'X max', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+            {'name': 'X len', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+            {'name': 'Y min', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+            {'name': 'Y max', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+            {'name': 'Y len', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+            {'name': 'Z min', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+            {'name': 'Z max', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+            {'name': 'Z len', 'type': 'float', 'value': 0.0, 'suffix': 'mm', 'readonly': True},
+        ]},
         {'name': 'Visible', 'type': 'bool', 'value': 1},
     ]},
 
@@ -24,7 +31,8 @@ params = [
         {'name': 'Cols', 'type': 'int', 'value': 5},
         {'name': 'Width', 'type': 'float', 'value': 100.0},
         {'name': 'Height', 'type': 'float', 'value': 100.0},
-        {'name': 'Margin', 'type': 'float', 'value': -1.0},
+        {'name': 'X Margin', 'type': 'float', 'value': -3.0},
+        {'name': 'Y Margin', 'type': 'float', 'value': -3.0},
         {'name': 'Start Z', 'type': 'float', 'value': 2.0},
         {'name': 'Max Depth', 'type': 'float', 'value': -10.0},
         {'name': 'Feedrate', 'type': 'float', 'value': 100.0},
@@ -48,6 +56,8 @@ params = [
     {'name': 'Grid', 'type': 'group', 'children': [
         {'name': 'Width', 'type': 'float', 'value': 100.0},
         {'name': 'Height', 'type': 'float', 'value': 100.0},
+        {'name': 'X origin', 'type': 'float', 'value': 0.0},
+        {'name': 'Y origin', 'type': 'float', 'value': 0.0},
         {'name': 'Visible', 'type': 'bool', 'value': 1},
     ]},
 

@@ -224,14 +224,28 @@ class Main(QMainWindow):
 
             # prefill probe width / height
             xmin, xmax = self.gl.gcode.limits['X']
+            xlen = xmax - xmin
             ymin, ymax = self.gl.gcode.limits['Y']
+            ylen = ymax - ymin
             zmin, zmax = self.gl.gcode.limits['Z']
-            self['probe.width'] = xmax
-            self['probe.height'] = ymax
-            self['gcode.width'] = xmax
-            self['gcode.height'] = ymax
-            self['gcode.min z'] = zmin
-            self['gcode.max z'] = zmax
+            zlen = zmax - zmin
+            self['gcode.limits.x min'] = xmin
+            self['gcode.limits.x max'] = xmax
+            self['gcode.limits.x len'] = xlen
+            self['gcode.limits.y min'] = ymin
+            self['gcode.limits.y max'] = ymax
+            self['gcode.limits.y len'] = ylen
+            self['gcode.limits.z min'] = zmin
+            self['gcode.limits.z max'] = zmax
+            self['gcode.limits.z len'] = zlen
+
+            self['probe.width'] = xlen
+            self['probe.height'] = ylen
+
+            self['grid.x origin'] = xmin
+            self['grid.y origin'] = ymin
+            self['grid.width'] = xlen
+            self['grid.height'] = ylen
             o = 3
 
             self.gl.ruler.x = xmin
@@ -253,10 +267,13 @@ class Main(QMainWindow):
             self.gl.zruler.redraw()
 
             self.gcode_path = name
-            print('Loaded {}'.format(name))
+
+            self.update_probe()
+            self.update_grid()
+            self.info('Loaded {}'.format(name))
         except IOError as e:
-            print('Unable to load {}'.format(name))
-            print(e)
+            self.info('Unable to load {}'.format(name))
+            self.info(e)
 
     def save_gcode_dialog(self):
         d = QFileDialog(self)
@@ -517,7 +534,11 @@ class Main(QMainWindow):
         self.run_cmd(out)
 
     # FIXME: should go to hc lib
-    def gen_probe_grid(self, rows, cols, w, h, x_margin, y_margin, start_z):
+    def gen_probe_grid(self, rows, cols,
+            w, h,
+            x_margin, y_margin,
+            x_trans, y_trans,
+            start_z):
         w = w - x_margin * 2.
         h = h - y_margin * 2.
 
@@ -534,10 +555,11 @@ class Main(QMainWindow):
         cy = y_margin
 
         out = []
+        self.info("{} {}".format(x_trans, y_trans))
 
         for i in range(rows):
             for j in range(cols):
-                out.append((cx, cy, start_z))
+                out.append((cx + x_trans, cy + y_trans, start_z))
                 cx += xstep
 
             cx = x_margin
@@ -546,11 +568,13 @@ class Main(QMainWindow):
         return out
 
     def get_probe_points(self):
-        m = self['probe.margin']
+        mx = self['probe.x margin']
+        my = self['probe.y margin']
         probe_points = self.gen_probe_grid(
             self['probe.rows'], self['probe.cols'],
             self['probe.width'], self['probe.height'],
-            m, m,
+            mx, my,
+            self['gcode.limits.x min'], self['gcode.limits.y min'],
             self['probe.start z'])
 
         return probe_points
@@ -595,9 +619,11 @@ class Main(QMainWindow):
     def update_grid(self):
         w = self['grid.width']
         h = self['grid.height']
+        tx = self['grid.x origin']
+        ty = self['grid.y origin']
         self.gl.grid.setSize(w, h, 1)
         self.gl.grid.resetTransform()
-        self.gl.grid.translate(w / 2., h / 2., -0.05)
+        self.gl.grid.translate(w / 2. + tx, h / 2. + ty, -0.05)
         self.gl.grid.setVisible(self['grid.visible'])
         self.gl.grid.redraw()
 
