@@ -114,7 +114,9 @@ class SerialMachine(MachineTalk):
 
     # maximum number of commands in queue waiting for 'ok' ack
     # FIXME: reword as buffer_size (in bytes), how to query this from FW?
-    max_waiting_for_ack = 5
+    # machine input buffer size in bytes
+    buffer_size =  256
+    #max_waiting_for_ack = 5
     # wrong ^^ we need to count character (256 characters for Smoothie)
 
     def connectionMade(self):
@@ -183,7 +185,10 @@ class SerialMachine(MachineTalk):
 
             return False
 
-        if self.ack_queue.qsize() >= self.max_waiting_for_ack:
+        #if self.ack_queue.qsize() >= self.max_waiting_for_ack:
+            #return False
+
+        if self.in_buffer >= self.buffer_size:
             return False
 
         try:
@@ -198,6 +203,7 @@ class SerialMachine(MachineTalk):
 
         self.transport.write(cmd.text)
         self.transport.write('\n')
+        self.in_buffer += len(cmd.text) + 1
 
         if not cmd.special:
             self.ack_queue.put(cmd)
