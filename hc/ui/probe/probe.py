@@ -585,11 +585,15 @@ class Main(QMainWindow):
         sz = self['probe.start z']
 
         yield 'G90'
+        yield 'G0 Z{}'.format(sz / 2.)
+        yield 'G4 P0'
+
         for point in points:
             yield 'G0 {}'.format(xyzfmt(*point))
             yield probecmd.format(depth, feed)
             # go straight up startz/2.
             yield 'G0 Z{}'.format(sz / 2.)
+            yield 'G4 P0'
 
     def run_probe(self):
         # clean probe result
