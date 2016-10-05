@@ -15,6 +15,7 @@ Requirements
 ------------
 
 * python
+* pyserial
 * argh
 * argcomplete
 * twisted
