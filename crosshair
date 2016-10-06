@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+
+# crosshair viewer for camera offset calibration
+
+CAMERA_INDEX = 0
+
+import cv
+if __name__ == "__main__":
+    cv.NamedWindow("preview", cv.CV_WINDOW_AUTOSIZE)
+
+    capture = cv.CaptureFromCAM(CAMERA_INDEX)
+    while True:
+        image = cv.QueryFrame(capture)
+        image_size = cv.GetSize(image)
+        w, h = image_size
+        print image_size
+
+        grayscale = cv.CreateImage(image_size, 8, 1)
+        cv.CvtColor(image, grayscale, cv.CV_BGR2GRAY)
+        cv.EqualizeHist(grayscale, grayscale)
+
+        #image = grayscale
+        cv.Line(image, (w/2, 0), (w/2, h), (0, 0, 0))
+        cv.Line(image, (0, h/2), (w, h/2), (0, 0, 0))
+        cv.ShowImage("preview", image)
+
+        k = cv.WaitKey(10)
+        print k
+        if k != -1 and (chr(k) == '\x1b' or chr(k) == 'q'):
+            break 
