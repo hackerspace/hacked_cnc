@@ -51,7 +51,9 @@ class Command(object):
         elif f in [';', '(']:
             self.comment = True
         else:
-            self.uknown = True
+            self.unknown = True
+            # no normalization for uknonw commands
+            self.normalized = cmd
 
     def __cmp__(self, other):
         if self.special:
