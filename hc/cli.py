@@ -33,6 +33,16 @@ def source_completer(prefix, parsed_args, **kwargs):
     for o in get_sources():
         yield o.name
 
+@named('send')
+@arg('CMD', help='Command to send to the server')
+def send(CMD):
+    def sendcmd(proto):
+        proto.sendLine(CMD)
+        proto.quit()
+        reactor.callLater(2, reactor.stop)
+
+    hc.client.build(sendcmd)
+    reactor.run()
 
 @named('server')
 def server(stdio=False, linuxcnc=False):
@@ -137,6 +147,7 @@ def main():
 
     parser = ArghParser()
     parser.add_commands([
+        send,
         shell,
         server,
         monitor,
