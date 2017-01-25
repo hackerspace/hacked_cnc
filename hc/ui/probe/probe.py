@@ -555,7 +555,6 @@ class Main(QMainWindow):
         cy = y_margin
 
         out = []
-        self.info("{} {}".format(x_trans, y_trans))
 
         for i in range(rows):
             for j in range(cols):
