@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>hc_monitor</string>
+   <string>hacked-cnc probe</string>
   </property>
   <property name="animated">
    <bool>false</bool>
