@@ -1,5 +1,6 @@
 import pyqtgraph.parametertree.parameterTypes as pTypes
 from pyqtgraph.parametertree import Parameter, ParameterTree, registerParameterType
+from pyqtgraph.widgets.SpinBox import SpinBox
 from PyQt5 import QtCore, QtWidgets
 
 params = [
@@ -35,7 +36,8 @@ params = [
         {'name': 'Y Margin', 'type': 'float', 'value': -3.0},
         {'name': 'Start Z', 'type': 'float', 'value': 2.0},
         {'name': 'Max Depth', 'type': 'float', 'value': -10.0},
-        {'name': 'Feedrate', 'type': 'float', 'value': 100.0},
+        {'name': 'Z Feedrate', 'type': 'int', 'value': 100},
+        {'name': 'Travel Feedrate', 'type': 'int', 'value': 1000},
         {'name': 'Run probe', 'type': 'action'},
         {'name': 'Process', 'type': 'action'},
         {'name': 'Save processed G-code', 'type': 'action'},
@@ -91,11 +93,49 @@ class SliderParameterItem(pTypes.WidgetParameterItem):
     def hideEditor(self):
         pass
 
-
 class SliderParameter(Parameter):
     itemClass = SliderParameterItem
 
+class IntSpinBox(SpinBox):
+    def updateText(self, prev=None):
+        self.skipValidate = True
+        txt = ("%i %s") % (self.val, self.opts['suffix'])
+        self.lineEdit().setText(txt)
+        self.lastText = txt
+        self.skipValidate = False
+
+class IntParameterItem(pTypes.WidgetParameterItem):
+    def makeWidget(self):
+        w = IntSpinBox()
+        w.sigChanged = w.sigValueChanged
+        w.sigChanging = w.sigValueChanging
+        return w
+
+class IntParameter(Parameter):
+    itemClass = IntParameterItem
+
+class FixedSpinBox(SpinBox):
+    def updateText(self, prev=None):
+        decimals = self.opts.get('decimals')
+        self.skipValidate = True
+        txt = ("%."+str(decimals)+"f %s") % (self.val, self.opts['suffix'])
+        self.lineEdit().setText(txt)
+        self.lastText = txt
+        self.skipValidate = False
+
+class FixedParameterItem(pTypes.WidgetParameterItem):
+    def makeWidget(self):
+        w = FixedSpinBox()
+        w.sigChanged = w.sigValueChanged
+        w.sigChanging = w.sigValueChanging
+        return w
+
+class FixedParameter(Parameter):
+    itemClass = FixedParameterItem
+
 registerParameterType('slider', SliderParameter, override=True)
+registerParameterType('int', IntParameter, override=True)
+registerParameterType('float', FixedParameter, override=True)
 
 
 class HCParamTree(ParameterTree):

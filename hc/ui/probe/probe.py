@@ -580,7 +580,8 @@ class Main(QMainWindow):
         return probe_points
 
     def gen_probe_gcode(self, points):
-        feed = self['probe.feedrate']
+        feed = self['probe.z feedrate']
+        travel_feed = self['probe.travel feedrate']
         depth = self['probe.max depth']
         sz = self['probe.start z']
 
@@ -589,7 +590,7 @@ class Main(QMainWindow):
         yield 'G4 P0'
 
         for point in points:
-            yield 'G0 {}'.format(xyzfmt(*point))
+            yield 'G0 {} F{}'.format(xyzfmt(*point), travel_feed)
             yield probecmd.format(depth, feed)
             yield 'G0 Z{}'.format(sz)
             yield 'G4 P0'
