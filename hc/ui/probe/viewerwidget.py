@@ -4,9 +4,9 @@ from OpenGL.GL import *
 from PyQt5.QtOpenGL import *
 from PyQt5 import QtGui
 
-import pyqtgraph.opengl as pygl
 import numpy as np
 
+from hc.ui.gl import GLViewWidget
 from hc.ui.glitems import *
 
 
@@ -21,7 +21,7 @@ def _gl_vector(array, *args):
     return vector
 
 
-class HCViewerWidget(pygl.GLViewWidget):
+class HCViewerWidget(GLViewWidget):
     ele = 0
     azi = 0
     gcodelist = -1
