@@ -316,7 +316,7 @@ class Main(QMainWindow):
 
         proc_events()
 
-        if 'G0' in cmd:
+        if 'G0' in cmd or 'G1' in cmd:
             x, y, z = parse.xyz(cmd[2:])
             # should probably emit signals
 
@@ -585,13 +585,13 @@ class Main(QMainWindow):
         sz = self['probe.start z']
 
         yield 'G90'
-        yield 'G0 Z{}'.format(sz)
+        yield 'G1 Z{}'.format(sz)
         yield 'G4 P0'
 
         for point in points:
-            yield 'G0 {} F{}'.format(xyzfmt(*point), travel_feed)
+            yield 'G1 {} F{}'.format(xyzfmt(*point), travel_feed)
             yield probecmd.format(depth, feed)
-            yield 'G0 Z{}'.format(sz)
+            yield 'G1 Z{}'.format(sz)
             yield 'G4 P0'
 
     def run_probe(self):
@@ -657,7 +657,6 @@ class Main(QMainWindow):
         datapath = os.path.join(gcdir, 'probedata.txt')
         outpath = os.path.join(gcdir, 'lvl_{}'.format(os.path.basename(gcpath)))
 
-        print(res)
         with open(datapath, 'w') as f:
             for x, y, z in res:
                 f.write("{:04.2f} {:04.2f} {:04.2f}\n".format(x, y, z))
