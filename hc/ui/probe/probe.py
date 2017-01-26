@@ -276,23 +276,24 @@ class Main(QMainWindow):
             self.info(str(e))
 
     def save_gcode_dialog(self):
-        d = QFileDialog(self)
-        d.setNameFilter("GCode (*.ngc *.gcode);;All files (*.*)")
-        d.exec_()
-        name = d.selectedFiles()[0]
+        fname, mask = QFileDialog.getSaveFileName(None, "Save G-Code", "",
+                "GCode (*.ngc *.gcode);;All files (*.*)")
+
+        if not fname:
+            return
         try:
             if self.gl.postgcode.orig:
                 self.gl.postgcode.save_gcode(name)
-                print('Saved post-processed g-code to {}'.format(name))
+                self.info('Saved post-processed g-code to {}'.format(name))
             elif self.gl.gcode.orig:
                 self.gl.gcode.save_gcode(name)
-                print('Saved original g-code to {}'.format(name))
+                self.info('Saved original g-code to {}'.format(name))
             else:
-                print('Nothing to save')
+                self.info('Nothing to save')
 
         except IOError as e:
-            print('Unable to save to {}'.format(name))
-            print(e)
+            self.info('Unable to save to {}'.format(name))
+            self.info(str(e))
 
     def append(self, text):
         self.text.append(text)
@@ -362,10 +363,9 @@ class Main(QMainWindow):
                 f.write("{:04.2f} {:04.2f} {:04.2f}\n".format(x, y, z))
 
     def load_probe_data_dialog(self):
-        d = QFileDialog(self)
-        d.setNameFilter("Log data (*.txt *.log);;All files (*.*)")
-        d.exec_()
-        fname = d.selectedFiles()[0]
+        fname, mask = QFileDialog.getOpenFileName(None, "Load probe data", "",
+            "Log data (*.txt *.log);;All files (*.*)")
+
         if fname:
             self.load_probe_data(fname)
 
@@ -651,7 +651,11 @@ class Main(QMainWindow):
             self.err('No probe results')
             return
 
-        datapath = '/tmp/hc_probedata'
+        gcpath = os.path.abspath(self.gcode_path)
+        gcdir = os.path.dirname(gcpath)
+
+        datapath = os.path.join(gcdir, 'probedata.txt')
+        outpath = os.path.join(gcdir, 'lvl_{}'.format(os.path.basename(gcpath)))
 
         print(res)
         with open(datapath, 'w') as f:
@@ -660,7 +664,6 @@ class Main(QMainWindow):
 
         script = config.get('leveling_tool', 'scale_gcode.py')
 
-        gcpath = os.path.abspath(self.gcode_path)
         args = '{} 1-999999 --zlevel {} {:.2f}'.format(gcpath,
                                                        datapath,
                                                        self.precision)
@@ -674,20 +677,18 @@ class Main(QMainWindow):
                                 stderr=subprocess.PIPE, close_fds=True)
 
         (stdout, stderr) = proc.communicate()
+        if proc.returncode == 0:
+          self.info('Done. Saving to {}'.format(outpath))
 
-        print("stderr:")
-        print(stderr)
-        print("stdout:")
-        print(stdout)
+          with open(outpath, 'w') as f:
+              f.write(stdout)
 
-        self.info('Done. Saving to /tmp/hc_postgcode')
-
-        fpath = '/tmp/hc_postgcode'
-        with open(fpath, 'w') as f:
-            f.write(stdout)
-
-        self.gl.postgcode.load_gcode(fpath)
-        self.info('Loaded post-processed G-code')
+          self.gl.postgcode.load_gcode(outpath)
+          self.info('Loaded post-processed G-code')
+        else:
+          self.info('Processing failed with return code {}'.format(proc.returncode))
+          self.info("Error was:")
+          self.info(stderr)
 
     # joystick handlers
     def axis_moving(self, axis, value):
