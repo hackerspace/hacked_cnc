@@ -96,6 +96,24 @@ class SliderParameterItem(pTypes.WidgetParameterItem):
 class SliderParameter(Parameter):
     itemClass = SliderParameterItem
 
+
+def mkOpts(opts, isInt=False):
+    defs = {
+        'value': 0, 'min': None, 'max': None,
+        'step': 1.0, 'dec': False,
+        'siPrefix': False, 'suffix': '', 'decimals': 3,
+    }
+    if isInt:
+        defs['int'] = True
+        defs['minStep'] = 1.0
+    for k in defs:
+        if k in opts:
+            defs[k] = opts[k]
+    if 'limits' in opts:
+            defs['bounds'] = opts['limits']
+    return defs
+
+
 class IntSpinBox(SpinBox):
     def updateText(self, prev=None):
         self.skipValidate = True
@@ -107,6 +125,7 @@ class IntSpinBox(SpinBox):
 class IntParameterItem(pTypes.WidgetParameterItem):
     def makeWidget(self):
         w = IntSpinBox()
+        w.setOpts(**mkOpts(self.param.opts, True))
         w.sigChanged = w.sigValueChanged
         w.sigChanging = w.sigValueChanging
         return w
@@ -126,6 +145,7 @@ class FixedSpinBox(SpinBox):
 class FixedParameterItem(pTypes.WidgetParameterItem):
     def makeWidget(self):
         w = FixedSpinBox()
+        w.setOpts(**mkOpts(self.param.opts))
         w.sigChanged = w.sigValueChanged
         w.sigChanging = w.sigValueChanging
         return w
