@@ -215,12 +215,12 @@ class Main(QMainWindow):
             proc_events()
 
     def load_gcode_dialog(self):
-        d = QFileDialog(self)
-        d.setNameFilter("GCode (*.ngc *.gcode);;All files (*.*)")
-        d.exec_()
-        name = d.selectedFiles()[0]
+        fname, mask = QFileDialog.getOpenFileName(None, "Load G-Code", "",
+                "GCode (*.ngc *.gcode);;All files (*.*)")
+        if not fname:
+            return
         try:
-            self.gl.gcode.load_gcode(name)
+            self.gl.gcode.load_gcode(fname)
 
             # prefill probe width / height
             xmin, xmax = self.gl.gcode.limits['X']
@@ -266,14 +266,14 @@ class Main(QMainWindow):
             self.gl.zruler.translate(xmin - o, ymin - o, zmin)
             self.gl.zruler.redraw()
 
-            self.gcode_path = name
+            self.gcode_path = fname
 
             self.update_probe()
             self.update_grid()
-            self.info('Loaded {}'.format(name))
+            self.info('Loaded {}'.format(fname))
         except IOError as e:
-            self.info('Unable to load {}'.format(name))
-            self.info(e)
+            self.info('Unable to load {}'.format(fname))
+            self.info(str(e))
 
     def save_gcode_dialog(self):
         d = QFileDialog(self)
