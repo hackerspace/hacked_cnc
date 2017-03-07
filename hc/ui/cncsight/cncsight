@@ -1,0 +1,225 @@
+#!/usr/bin/python
+import cv2
+import math
+import struct
+import numpy
+import os
+import sys
+os.environ['QT_API'] = 'pyqt5'
+from PyQt5 import QtWidgets, QtCore, uic, QtGui
+
+#if __name__ == '__main__':
+#    if __package__ is None:
+#        from os import path
+#        sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+#        __package__ = 'cnc-navi'
+#        from probe.probe import QHcClient
+#        from hc.util import enc_msg, dec_msg, xyzfmt
+from hc.ui.probe.probe import QHcClient
+from hc.util import enc_msg, dec_msg, xyzfmt
+
+#from probe import QHcClient
+
+class VideoUpdate(QtCore.QThread):
+    resultReady = QtCore.pyqtSignal(numpy.ndarray)
+
+    def run(self):
+        while True:
+            _, frame = self.grabber.read()
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            self.resultReady.emit(frame)
+
+    def setGrabber(self, grabber):
+        self.grabber = grabber
+
+
+class VideoItem(QtWidgets.QGraphicsItem):
+    def __init__(self, parent=None):
+        super(VideoItem, self).__init__(parent)
+        self.img = [[]] #numpy.ndarray([[]])
+        self.w, self.h = 0, 0
+
+    def boundingRect(self):
+        return QtCore.QRectF(-self.w/2, -self.h/2, self.w, self.h)
+
+    def paint(self, painter, option, w):
+        w, h = len(self.img[0]), len(self.img)
+        self.w, self.h = w, h
+        if type(self.img) is list:
+            return
+        if type(self.img[0][0]) is numpy.uint8:
+            img = QtGui.QImage(self.img, w, h, QtGui.QImage.Format_Grayscale8)
+        else:
+            img = QtGui.QImage(self.img, w, h, QtGui.QImage.Format_RGB888)
+        painter.drawImage(self.x()-w/2, self.y()-h/2, img)
+
+    def newFrame(self, frame):
+        self.img = frame
+
+    def currentFrame(self):
+        return self.img
+
+
+class MainWin(QtWidgets.QMainWindow):
+  def __init__(self, parent=None):
+    super(MainWin, self).__init__(parent)
+    uic.loadUi('ui.ui', self)
+    self.scene = QtWidgets.QGraphicsScene()
+    self.graphicsView.setScene(self.scene)
+
+    self.video = cv2.VideoCapture()
+    self.video.open(0)
+
+    self.updater = VideoUpdate()
+    self.updater.setGrabber(self.video)
+    _, frame = self.video.read()
+
+    self.videoItem = VideoItem()
+    self.scene.addItem(self.videoItem)
+    self.videoItem.setPos(0, 0)#-self.scene.width(), -self.scene.height()/2)
+
+    #second scene
+    self.scene2 = QtWidgets.QGraphicsScene()
+    self.graphicsView_2.setScene(self.scene2)
+    self.videoItem2 = VideoItem()
+    self.scene2.addItem(self.videoItem2)
+
+    self.updater.resultReady.connect(self.on_videoUpdate_resultReady)
+    self.updater.start()
+
+    self.conn = QHcClient(self)
+    self.conn.readyRead.connect(self.readSocket)
+    self.conn.error.connect(self.socketError)
+    self.conn.connected.connect(self.socketConnect)
+    self.conn.disconnected.connect(self.socketDisconnect)
+    self.conn.abort()
+    self.conn.connectToHost('localhost', 11011)
+
+
+  def handle_response(self, idx, txt):
+      print idx
+      print txt
+
+  def socketConnect(self):
+      print 'connected'
+
+  def socketDisconnect(self):
+      print 'disconnected'
+
+  def socketError(self, socketError):
+      print "Connection error occurred: {0}".format(self.conn.errorString())
+
+  def readSocket(self):
+      def handle(r):
+          if not r:
+              return
+
+          #print('buffered', r)
+          (idx, txt) = dec_msg(r)
+          if idx is not None:
+              self.handle_response(idx, txt)
+
+      buffer = ''
+
+      while True:
+          r = str(self.conn.readLine())
+
+          if not r:
+              handle(buffer)
+              if self.conn.canReadLine():
+                  buffer = ''
+                  continue
+
+              break
+
+          if r[0] == '/':
+              _, msg = dec_msg(r)
+              #self.append('{}'.format(msg))
+              continue
+
+          if r[0] == '[':
+              handle(buffer)
+              buffer = r
+              continue
+
+          buffer += r
+
+
+
+  def on_videoUpdate_resultReady(self, img):
+      self.videoItem.newFrame(img)
+      #self.scene.advance()
+      self.scene.update()
+
+#  @QtCore.pyqtSlot(int)
+#  def on_horizontalSlider_valueChanged(self, v):
+#    global f
+#    f = v
+#
+#  @QtCore.pyqtSlot(int)
+#  def on_horizontalSlider_2_valueChanged(self, v):
+#    global vol
+#    vol = v
+#  
+
+  def fill_second_video(self, img):
+      gimg = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+      ksize = len(img)/3, len(img[0])/3
+#      blured = cv2.GaussianBlur(gimg.astype('float'), (ksize[0]+(1-ksize[0]%2), ksize[1]+(1-ksize[1]%2)), 0, 0)
+#      img = cv2.subtract(gimg.astype('float'), blured)
+#      img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
+#      img = cv2.GaussianBlur(img, (5, 5), 0, 0)
+      img = gimg.astype('uint8')
+#      img = cv2.Canny(img, 10, 40, 3)
+      img = cv2.GaussianBlur(img, (5, 5), 0, 0)
+  #    img = cv2.bitwise_not(img)
+#      img2 = img.copy()
+#      img = cv2.Sobel(img, cv2.CV_8U, 1, 1)
+#      img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX)
+#      print img
+#      img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 7, 1)
+      circles = cv2.HoughCircles(img, cv2.cv.CV_HOUGH_GRADIENT, 1, 40, param2=80, minRadius=1, maxRadius=400)
+      img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+      if circles is not None:
+          for x, y, r in circles[0]:
+              print x,y,r
+              cv2.circle(img, (x, y), r, (0, 255, 0), 2)
+              cv2.circle(img, (x, y), 1, (255, 0, 0), 2)
+
+      print circles
+#      print img[0][0]
+      self.videoItem2.newFrame(img)
+      self.scene2.update()
+
+  @QtCore.pyqtSlot(bool)
+  def on_pushButton_2_clicked(self, v):
+      dlg = QtWidgets.QFileDialog()
+      dlg.setFileMode(QtWidgets.QFileDialog.AnyFile)
+      dlg.setNameFilters(["*.png; *.jpg", "*.png", "*.jpg"])
+      filename = []
+      if dlg.exec_():
+          filename = dlg.selectedFiles()
+          if filename is not []:
+              img = cv2.imread(filename[0])
+              self.fill_second_video(img)
+
+
+
+  @QtCore.pyqtSlot(bool)
+  def on_pushButton_clicked(self, v):
+      img = self.videoItem.currentFrame()
+      self.fill_second_video(img)
+      self.conn.cmd('G0 X10 Y10 F300')
+
+def main():
+
+
+    app=QtWidgets.QApplication(sys.argv)
+
+    w=MainWin()
+
+    w.show()
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
